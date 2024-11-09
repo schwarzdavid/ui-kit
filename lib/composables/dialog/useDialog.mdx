@@ -1,0 +1,615 @@
+import {Meta, Story} from "@storybook/blocks";
+import * as InfoDialogContent from "./docs/internal/InfoDialog.stories";
+import * as DialogOutlet from './docs/internal/DialogOutlet.stories.ts'
+import * as PromptDialogStories from "./docs/internal/PromptDialog.stories.ts";
+import * as ConfirmDialogStories from "./docs/internal/ConfirmDialog.stories.ts";
+
+<Meta title="composables/useDialog"/>
+
+# useDialog
+
+<Story of={DialogOutlet.Default}/>
+
+Dialog util composable to functionally create dialogs.
+
+## General Usage
+
+First, anywhere inside your application and inside the `VApp` Vuetify-component, place the `DialogOutlet`. This component renders the later created dialogs. It is recommended to use the root component of your application for this (`App.vue`).
+
+```vue
+<template>
+    <VApp>
+        <VMain>
+            ...
+        </VMain>
+        <DialogOutlet/>    <-- This need to be INSIDE the VApp
+    </VApp>
+</template>
+
+<script lang="ts" setup>
+    import {DialogOutlet} from "@schwarzdavid/ui-kit";
+</script>
+```
+
+After the DialogOutlet is placed anywhere in your application, you can call one of the provided functions to create a predefined dialog in your individual components. See the documentation below.
+
+## DialogComposable::info()
+
+Info dialogs are only meant to show information to the user or to ask for very simple choices (e.g. override/create new profile). However, **do not** use this function to ask for user confirmation, e.g. to ask the user for confirmation before deleting an entity. The `DialogComposable::confirm` is better suited for these kinds of requirement.
+
+### Demo
+<Story of={InfoDialogContent.Default}/>
+
+### Usage
+
+#### Simple Info Dialog
+
+`dialog.info(title: string, content: string): Promise<null>`
+
+By calling this function, a info dialog will be created with your defined title and content. Note, that **both** will be **translated**, so you have to pass the translation keys instead of the actual content.
+
+#### Customized
+
+`dialog.info<T>(options: InfoDialogProps<T>): Promise<T | null>`
+
+**InfoDialogProps&lt;T&gt;**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>title *</td>
+        <td>string</td>
+        <td>The title of the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateTitle</td>
+        <td>boolean</td>
+        <td>If the title should be translated</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>additionalCta</td>
+        <td>Array&lt;InfoDialogCta&lt;T&gt;&gt;</td>
+        <td>Additional call-to-action buttons for the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>defaultCta</td>
+        <td>Partial&lt;InfoDialogCta&lt;T&gt;&gt; | false</td>
+        <td>The default call-to-action button for the dialog. If set to `false`, the default CTA will be hidden.</td>
+        <td>
+            ```ts
+            {
+                text: 'APP.CLOSE',
+                translateText: true,
+                value: null
+            }
+            ```
+        </td>
+    </tr>
+    <tr>
+        <td>width</td>
+        <td>number | string</td>
+        <td>Max width of the dialog</td>
+        <td>650</td>
+    </tr>
+    <tr>
+        <td>content (*)</td>
+        <td>string</td>
+        <td>The content text of the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateContent</td>
+        <td>boolean</td>
+        <td>If the content should be translated. Only when `content` is passed and `component` and `props` is not.</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>component (*)</td>
+        <td>Component</td>
+        <td>A Vue component to render inside the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>props (*)</td>
+        <td>ComponentProps&lt;component&gt;</td>
+        <td>Props to pass to the component rendered inside the dialog. Only when `component` is defined</td>
+        <td>---</td>
+    </tr>
+    </tbody>
+</table>
+Note: `content` (and optionally `translateContent`) OR `component` and `props` **must** be provided. You cannot mix both.
+
+**InfoDialogCta&lt;T&gt;**
+
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>text *</td>
+        <td>string</td>
+        <td>The text to display on the CTA button</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateText</td>
+        <td>boolean</td>
+        <td>If the text should be translated</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>value (*)</td>
+        <td>T</td>
+        <td>The value to return when the CTA button is clicked</td>
+        <td>`null`</td>
+    </tr>
+    <tr>
+        <td>action (*)</td>
+        <td>() =&gt; unknown</td>
+        <td>The action to perform when the CTA button is clicked</td>
+        <td>---</td>
+    </tr>
+    </tbody>
+</table>
+
+### Example implementation
+
+```ts
+<template>
+    <div class="d-flex gc-4">
+        <VBtn color="primary" @click="openTextDialog">Text content</VBtn>
+        <VBtn color="primary" @click="openComponentDialog">Component content</VBtn>
+        <VBtn color="primary" @click="openAdditionalCtaDialog">Additional cta</VBtn>
+        <VBtn color="primary" @click="openChoiceCtaDialog">Choice cta</VBtn>
+    </div>
+</template>
+
+<script lang="ts" setup>
+    import {useDialog} from "@schwarzdavid/ui-kit";
+    import InfoDialogContent from "<path-to-component>";
+
+    const dialog = useDialog()
+
+    function openTextDialog(): void {
+        dialog.info('Text Dialog', 'Lorem ipsum...')
+    }
+
+    function openComponentDialog(): void {
+        dialog.info({
+            title: 'Component Dialog',
+            component: InfoDialogContent,
+            props: {
+                foo: 5 // <- in this case, InfoDialogContent has defineProps<{foo: number}>()
+            }
+        })
+    }
+
+    function openAdditionalCtaDialog(): void {
+        dialog.info({
+            title: 'Additional Cta',
+            content: 'Lorem ipsum...',
+            additionalCta: [
+                {
+                    text: 'Show alert',
+                    action: () => alert('Test'),
+                },
+            ],
+        })
+    }
+
+    async function openChoiceCtaDialog(): Promise <void> {
+        const output = await dialog.info<string>({
+            title: 'Choice Cta',
+            content: 'Lorem ipsum...',
+            defaultCta: false,
+            additionalCta: [
+                {
+                    text: 'Choice A',
+                    value: 'A',
+                },
+                {
+                    text: 'Choice B',
+                    value: 'B',
+                },
+            ],
+        })
+        console.log(output) // Will be "A" or "B"
+    }
+</script>
+```
+
+## DialogComposable::prompt()
+
+Prompt dialogs are meant to let users choose an option from a custom component (with a custom logic). For example to rename a translated text field, change the location of a folder, ...<br/>
+Also more complex applications are possible, e.g. material selection with custom filters and so on.
+
+### Demo
+<Story of={PromptDialogStories.Default}/>
+
+### Usage
+
+`dialog.prompt<T, R extends boolean>(options: PromptDialogProps<T, R>): Promise<R extends true ? T : T | null>`
+
+**PromptDialogProps&lt;T, R extends boolean&gt;**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>title *</td>
+        <td>string</td>
+        <td>The title of the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateTitle</td>
+        <td>boolean</td>
+        <td>If the title should be translated</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>saveCta</td>
+        <td>Partial&lt;PromptDialogCta&gt;</td>
+        <td></td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>abortCta</td>
+        <td>Partial&lt;PromptDialogCta&gt;</td>
+        <td></td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>initialValue</td>
+        <td>MaybeRefOrGetter&lt;T&gt;</td>
+        <td>The initial value which should be used to pass as modelValue to your component</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>size</td>
+        <td>PromptDialogSize.LARGE | PromptDialogSize.SMALL</td>
+        <td>The size of the dialog. If set to `PromptDialogSize.LARGE`, the dialog will not only be larger but also change to fullscreen on mobile devices.</td>
+        <td>`PromptDialogSize.SMALL`</td>
+    </tr>
+    <tr>
+        <td>required</td>
+        <td>R</td>
+        <td>Define whether the modelValue is required or not</td>
+        <td>`false`</td>
+    </tr>
+    <tr>
+        <td>component *</td>
+        <td>Component&lt;\{modelValue: T, toolbar: HTMLElement\}&gt;</td>
+        <td>A Vue component to render inside the dialog. The component must define a model of type `T` and also accept a prop `toolbar` which is the HTMLElement of the toolbar. You can use it to add elements to the toolbar with the &lt;teleport&gt; component.</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>props *</td>
+        <td>ComponentProps&lt;component&gt;</td>
+        <td>Props to pass to the component rendered inside the dialog.</td>
+        <td>---</td>
+    </tr>
+    </tbody>
+</table>
+
+Note: Properties with * are required
+
+**PromptDialogCta**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>text</td>
+        <td>string</td>
+        <td>The text which should be shown in the CTA</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateText</td>
+        <td>boolean</td>
+        <td>If the text should be translated or not</td>
+        <td>`true`</td>
+    </tr>
+    </tbody>
+</table>
+
+### Example implementation
+
+```ts
+<template>
+    <div class="d-flex gc-4">
+        <VBtn color="primary" @click="openPromptDialog">Translated Input</VBtn>
+        <VBtn color="primary" @click="openLargePromptDialog">Complex Prompt</VBtn>
+    </div>
+</template>
+
+<script lang="ts" setup>
+    import { useDialog, PromptDialogSize } from '@schwarzdavid/ui-kit'
+    import PromptDialogContent from '<path-to-your-component>'
+    import PromptDialogLargeContent from '<path-to-your-component>'
+
+    const dialog = useDialog()
+
+    async function openPromptDialog(): Promise<void> {
+        const result = await dialog.prompt({
+            component: PromptDialogContent,
+            props: {
+                label: 'Example translated input',
+            },
+            initialValue: {},
+            title: 'Testprompt',
+            translateTitle: false,
+        })
+        console.log(result)
+    }
+
+    async function openLargePromptDialog(): Promise<void> {
+        const result = await dialog.prompt({
+            component: PromptDialogLargeContent,
+            props: {},
+            title: 'Large prompt',
+            translateTitle: false,
+            size: PromptDialogSize.LARGE,
+        })
+        console.log(result)
+    }
+</script>
+```
+
+## DialogComposable::confirm()
+
+The confirm method is used to ask for user confirmation. It comes with different confirmation levels (default, warning, danger) and always resolves to `true`/`false`. When you need other options, e.g. a number, string or a nullable boolean, use the `DialogComposable::info()`-function.
+
+### Demo
+<Story of={ConfirmDialogStories.Default}/>
+
+### Usage
+
+#### Simple Confirm Dialog
+
+`dialog.confirm(title: string, content: string, level?: ConfirmDialogLevel): Promise<boolean>`
+
+By calling this function, a confirm dialog will be created with your defined title, content and (optionally) level. Note, that **both** will be **translated**, so you have to pass the translation keys instead of the actual content.
+
+#### Customized
+
+`dialog.confirm(options: ConfirmDialogProps): Promise<boolean>`
+
+**ConfirmDialogProps**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>title *</td>
+        <td>string</td>
+        <td>The title of the dialog</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateTitle</td>
+        <td>boolean</td>
+        <td>If the title should be translated</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>confirmCta</td>
+        <td>Partial&lt;ConfirmDialogCta&gt;</td>
+        <td>Customize the confirmation button</td>
+        <td>
+            ```ts
+            {
+                text: 'APP.YES',
+                translateTitle: true
+            }
+            ```
+        </td>
+    </tr>
+    <tr>
+        <td>rejectCta</td>
+        <td>Partial&lt;ConfirmDialogCta&gt;</td>
+        <td>Customize the rejection button</td>
+        <td>
+            ```ts
+            {
+                text: 'APP.NO',
+                translateTitle: true
+            }
+            ```
+        </td>
+    </tr>
+    <tr>
+        <td>throwOnReject</td>
+        <td>boolean</td>
+        <td>Whether the promise should be rejected instead of resolving with `false`. Use this option in combination with `try/catch` to reduce an unnecessary if condition.</td>
+        <td>`false`</td>
+    </tr>
+    <tr>
+        <td>permanent</td>
+        <td>boolean</td>
+        <td>When set to true, a click on the backdrop will not resolve to `false`. Instead the dialog will stay open until the user presses the actual confirm or reject button. Also the close button right to the title will be hidden.</td>
+        <td>`false`</td>
+    </tr>
+    <tr>
+        <td>maxWidth</td>
+        <td>number | string</td>
+        <td></td>
+        <td>`550`</td>
+    </tr>
+    <tr>
+        <td>highlightCta</td>
+        <td>'confirm' | 'reject' | false</td>
+        <td>Which CTA should be elevated. If set to false, both buttons will be shown as text.</td>
+        <td>`'confirm'`</td>
+    </tr>
+    <tr>
+        <td>level</td>
+        <td>ConfirmDialogLevel</td>
+        <td>The seriousity of the confirmation dialog</td>
+        <td>`ConfirmDialogLevel.DEFAULT`</td>
+    </tr>
+    <tr>
+        <td>content (*)</td>
+        <td>string</td>
+        <td>The text content to show</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateContent</td>
+        <td>boolean</td>
+        <td>If the content should be translated</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>component</td>
+        <td>Component</td>
+        <td>A Vue component that should be shown instead of a simple string content</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>props</td>
+        <td>ComponentProps&lt;component&gt;</td>
+        <td>Any data that the passed component will accept als props</td>
+        <td>---</td>
+    </tr>
+    </tbody>
+</table>
+Note: `content` (and optionally `translateContent`) OR `component` and `props` **must** be provided. You cannot mix both.
+
+**ConfirmDialogCta**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>text</td>
+        <td>string</td>
+        <td>Text that should be shown in the button</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateText</td>
+        <td>boolean</td>
+        <td>If the text should be translated</td>
+        <td>`true`</td>
+    </tr>
+    </tbody>
+</table>
+
+**ConfirmDialogLevel**
+
+The enum defining the seriousity of the confirm dialog
+
+<table>
+    <thead>
+    <tr>
+        <th>Key</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>DEFAULT</td>
+        <td>No seriousity. All buttons will be in the primary color.</td>
+    </tr>
+    <tr>
+        <td>WARNING</td>
+        <td>Medium seriousity. All buttons will be in the warning color.</td>
+    </tr>
+    <tr>
+        <td>DANGER</td>
+        <td>High seriousity. All buttons will be in the error color.</td>
+    </tr>
+    </tbody>
+</table>
+
+### Example implementation
+
+```ts
+<template>
+    <div class="d-flex gc-4">
+        <VBtn color="primary" @click="openDefaultConfirmDialog">Default Confirm choice</VBtn>
+        <VBtn color="primary" @click="openWarningConfirmDialog">Warning choice</VBtn>
+        <VBtn color="primary" @click="openDangerousConfirmDialog">Dangerous choice</VBtn>
+        <VBtn color="primary" @click="openCustomConfirmDialog">Custom content</VBtn>
+    </div>
+</template>
+
+<script lang="ts" setup>
+    import { useDialog, ConfirmDialogLevel } from '@schwarzdavid/ui-kit'
+    import ConfirmDialogContent from '<path-to-your-component>'
+
+    const dialog = useDialog()
+
+    async function openDefaultConfirmDialog(): Promise<void> {
+        const result = await dialog.confirm('APP.CONFIRM_DELETE_TITLE', 'APP.CONFIRM_DELETE')
+    }
+
+    async function openWarningConfirmDialog(): Promise<void> {
+        const result = await dialog.confirm('APP.WARNING_TITLE', 'APP.WARNING', ConfirmDialogLevel.WARNING)
+    }
+
+    async function openDangerousConfirmDialog(): Promise<void> {
+        const result = await dialog.confirm({
+            title: 'Attention!',
+            translateTitle: false,
+            content: 'Are you sure to delete this item?',
+            translateContent: false,
+            level: ConfirmDialogLevel.DANGER,
+            permanent: true,
+        })
+    }
+
+    async function openCustomConfirmDialog(): Promise<void> {
+        const result = await dialog.confirm({
+            title: 'APP.CONFIRM_DELETE_TITLE',
+            component: ConfirmDialogContent,
+            props: {}, // <- needs to be set, even if ConfirmDialogContent does not define any props
+            confirmCta: {
+                text: 'APP.CONFIRM',
+            },
+        })
+    }
+</script>
+```
