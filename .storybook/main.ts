@@ -3,7 +3,7 @@ import { withoutVitePlugins } from '@storybook/builder-vite'
 
 const config: StorybookConfig = {
     stories: ['../lib/**/*.stories.@(ts|tsx)', '../lib/**/*.@(md|mdx)'],
-    addons: ['@storybook/addon-essentials', '@storybook/addon-mdx-gfm'],
+    addons: ['@storybook/addon-essentials'],
     framework: {
         name: '@storybook/vue3-vite',
         options: {},
