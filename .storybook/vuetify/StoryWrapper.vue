@@ -7,9 +7,11 @@
 </template>
 
 <script lang="ts" setup>
-defineProps<{
-    theme: string
-}>()
+    import { VApp, VMain } from 'vuetify/components'
+
+    defineProps<{
+        theme: string
+    }>()
 </script>
 
 <style lang="scss">

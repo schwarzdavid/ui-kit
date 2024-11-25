@@ -35,61 +35,61 @@
 </template>
 
 <script lang="ts" setup generic="T, R extends boolean">
-import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
-import type { UnwrapRef } from 'vue'
-import { computed, ref, toValue } from 'vue'
-import { useDisplay } from 'vuetify'
-import { merge } from 'lodash'
-import type { PromptDialogCta, PromptDialogProps } from '../../../presets/PromptDialogProps'
-import { PromptDialogSize } from '../../../presets/PromptDialogProps'
-import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
-import type { DialogComponentEmits } from '../../../types/DialogComponent'
+    import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
+    import type { UnwrapRef } from 'vue'
+    import { computed, ref, toValue } from 'vue'
+    import { useDisplay } from 'vuetify'
+    import { merge } from 'lodash'
+    import type { PromptDialogCta, PromptDialogProps } from '../../../presets/PromptDialogProps'
+    import { PromptDialogSize } from '../../../presets/PromptDialogProps'
+    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
+    import type { DialogComponentEmits } from '../../../types/DialogComponent'
 
-const props = defineProps<{ data: PromptDialogProps<T, R> }>()
-const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
+    const props = defineProps<{ data: PromptDialogProps<T, R> }>()
+    const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
 
-const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
-    [PromptDialogSize.SMALL]: 650,
-    [PromptDialogSize.LARGE]: 1200,
-}
-const DEFAULT_ABORT_CTA: PromptDialogCta = {
-    text: 'APP.CANCEL',
-    translateText: true,
-}
-const DEFAULT_SAVE_CTA: PromptDialogCta = {
-    text: 'APP.SAVE',
-    translateText: true,
-}
-
-const dialogModel = ref(true)
-const resolveValue = ref<T | null>(toValue(props.data.initialValue) ?? null)
-const toolbar = ref<HTMLDivElement | null>(null)
-const { mobile } = useDisplay()
-const isSaveDisabled = computed(() => props.data.required && !resolveValue.value)
-const maxWidth = computed(() => MAX_WIDTH_MAP[props.data.size ?? PromptDialogSize.SMALL])
-const fullscreen = computed(() => props.data.size === PromptDialogSize.LARGE ? mobile.value : false)
-const abortCta = computed(() => merge({}, DEFAULT_ABORT_CTA, props.data.abortCta))
-const saveCta = computed(() => merge({}, DEFAULT_SAVE_CTA, props.data.saveCta))
-const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
-
-function closeDialog(): void {
-    resolveValue.value = (toValue(props.data.initialValue) ?? null) as UnwrapRef<T> | null
-    dialogModel.value = false
-}
-
-function saveDialog(): void {
-    dialogModel.value = false
-}
-
-function resolveDialog(): void {
-    if (props.data.required && !resolveValue.value) {
-        // TODO: pass error object
-        emit('reject')
-        return
+    const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
+        [PromptDialogSize.SMALL]: 650,
+        [PromptDialogSize.LARGE]: 1200,
+    }
+    const DEFAULT_ABORT_CTA: PromptDialogCta = {
+        text: 'APP.CANCEL',
+        translateText: true,
+    }
+    const DEFAULT_SAVE_CTA: PromptDialogCta = {
+        text: 'APP.SAVE',
+        translateText: true,
     }
 
-    emit('resolve', resolveValue.value)
-}
+    const dialogModel = ref(true)
+    const resolveValue = ref<T | null>(toValue(props.data.initialValue) ?? null)
+    const toolbar = ref<HTMLDivElement | null>(null)
+    const { mobile } = useDisplay()
+    const isSaveDisabled = computed(() => props.data.required && !resolveValue.value)
+    const maxWidth = computed(() => MAX_WIDTH_MAP[props.data.size ?? PromptDialogSize.SMALL])
+    const fullscreen = computed(() => props.data.size === PromptDialogSize.LARGE ? mobile.value : false)
+    const abortCta = computed(() => merge({}, DEFAULT_ABORT_CTA, props.data.abortCta))
+    const saveCta = computed(() => merge({}, DEFAULT_SAVE_CTA, props.data.saveCta))
+    const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
+
+    function closeDialog(): void {
+        resolveValue.value = (toValue(props.data.initialValue) ?? null) as UnwrapRef<T> | null
+        dialogModel.value = false
+    }
+
+    function saveDialog(): void {
+        dialogModel.value = false
+    }
+
+    function resolveDialog(): void {
+        if (props.data.required && !resolveValue.value) {
+            // TODO: pass error object
+            emit('reject')
+            return
+        }
+
+        emit('resolve', resolveValue.value)
+    }
 </script>
 
 <style lang="scss" scoped>

@@ -21,7 +21,9 @@
 </template>
 
 <script lang="ts" setup>
-defineProps<{
-    foo: number
-}>()
+    import { VCardText, VTable } from 'vuetify/components'
+
+    defineProps<{
+        foo: number
+    }>()
 </script>

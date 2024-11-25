@@ -39,67 +39,67 @@
 </template>
 
 <script lang="ts" setup>
-import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
-import { computed, ref } from 'vue'
-import { merge } from 'lodash'
-import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
-import type { DialogComponentEmits } from '../../../types/DialogComponent.ts'
-import type {
-    ConfirmDialogComponentContent,
-    ConfirmDialogCta,
-    ConfirmDialogProps,
-    ConfirmDialogTextContent,
-} from '../../../presets/ConfirmDialogProps'
+    import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
+    import { computed, ref } from 'vue'
+    import { merge } from 'lodash'
+    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
+    import type { DialogComponentEmits } from '../../../types/DialogComponent.ts'
+    import type {
+        ConfirmDialogComponentContent,
+        ConfirmDialogCta,
+        ConfirmDialogProps,
+        ConfirmDialogTextContent,
+    } from '../../../presets/ConfirmDialogProps'
 
-const props = defineProps<{ data: ConfirmDialogProps }>()
-const emit = defineEmits<DialogComponentEmits<boolean>>()
+    const props = defineProps<{ data: ConfirmDialogProps }>()
+    const emit = defineEmits<DialogComponentEmits<boolean>>()
 
-const DEFAULT_MAX_WIDTH = 550
-const DEFAULT_CONFIRM_CTA: ConfirmDialogCta = {
-    text: 'APP.YES',
-    translateText: true,
-}
-const DEFAULT_REJECT_CTA: ConfirmDialogCta = {
-    text: 'APP.NO',
-    translateText: true,
-}
+    const DEFAULT_MAX_WIDTH = 550
+    const DEFAULT_CONFIRM_CTA: ConfirmDialogCta = {
+        text: 'APP.YES',
+        translateText: true,
+    }
+    const DEFAULT_REJECT_CTA: ConfirmDialogCta = {
+        text: 'APP.NO',
+        translateText: true,
+    }
 
-let resolveValue = false
+    let resolveValue = false
 
-const dialogModel = ref(true)
-const textContent = computed<Pick<ConfirmDialogTextContent, 'content' | 'translateContent'> | null>(() => Object.hasOwn(props.data, 'content')
-    ? {
+    const dialogModel = ref(true)
+    const textContent = computed<Pick<ConfirmDialogTextContent, 'content' | 'translateContent'> | null>(() => Object.hasOwn(props.data, 'content')
+        ? {
             content: (props.data as ConfirmDialogTextContent).content,
             translateContent: (props.data as ConfirmDialogTextContent).translateContent,
         }
-    : null)
-const componentContent = computed<Pick<ConfirmDialogComponentContent, 'component' | 'props'> | null>(() => Object.hasOwn(props.data, 'component')
-    ? {
+        : null)
+    const componentContent = computed<Pick<ConfirmDialogComponentContent, 'component' | 'props'> | null>(() => Object.hasOwn(props.data, 'component')
+        ? {
             component: (props.data as ConfirmDialogComponentContent).component,
             props: (props.data as ConfirmDialogComponentContent).props,
         }
-    : null)
-const confirmCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_CONFIRM_CTA, props.data.confirmCta))
-const rejectCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_REJECT_CTA, props.data.rejectCta))
-const highlightCta = computed<ConfirmDialogProps['highlightCta']>(() => props.data.highlightCta ?? 'confirm')
-const ctaColor = computed<string>(() => props.data.level ?? 'primary')
+        : null)
+    const confirmCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_CONFIRM_CTA, props.data.confirmCta))
+    const rejectCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_REJECT_CTA, props.data.rejectCta))
+    const highlightCta = computed<ConfirmDialogProps['highlightCta']>(() => props.data.highlightCta ?? 'confirm')
+    const ctaColor = computed<string>(() => props.data.level ?? 'primary')
 
-function closeDialog(): void {
-    dialogModel.value = false
-}
-
-function finishDialog(): void {
-    resolveValue = true
-    dialogModel.value = false
-}
-
-function resolveDialog(): void {
-    if (props.data.throwOnReject && !resolveValue) {
-        emit('reject')
-        return
+    function closeDialog(): void {
+        dialogModel.value = false
     }
-    emit('resolve', resolveValue)
-}
+
+    function finishDialog(): void {
+        resolveValue = true
+        dialogModel.value = false
+    }
+
+    function resolveDialog(): void {
+        if (props.data.throwOnReject && !resolveValue) {
+            emit('reject')
+            return
+        }
+        emit('resolve', resolveValue)
+    }
 </script>
 
 <style lang="scss" scoped>

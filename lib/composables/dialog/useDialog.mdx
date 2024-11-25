@@ -1,8 +1,8 @@
 import {Meta, Story} from "@storybook/blocks";
-import * as InfoDialogContent from "./docs/internal/InfoDialog.stories";
-import * as DialogOutlet from './docs/internal/DialogOutlet.stories.ts'
-import * as PromptDialogStories from "./docs/internal/PromptDialog.stories.ts";
-import * as ConfirmDialogStories from "./docs/internal/ConfirmDialog.stories.ts";
+import * as InfoDialogContent from "./docs/stories/InfoDialog.stories";
+import * as DialogOutlet from './docs/stories/DialogOutlet.stories.ts'
+import * as PromptDialogStories from "./docs/stories/PromptDialog.stories.ts";
+import * as ConfirmDialogStories from "./docs/stories/ConfirmDialog.stories.ts";
 
 <Meta title="composables/useDialog"/>
 
@@ -14,7 +14,7 @@ Dialog util composable to functionally create dialogs.
 
 ## General Usage
 
-First, anywhere inside your application and inside the `VApp` Vuetify-component, place the `DialogOutlet`. This component renders the later created dialogs. It is recommended to use the root component of your application for this (`App.vue`).
+First, anywhere inside your application and inside the `VApp` Vuetify-component, place the `UiKitOutlet`. This component renders the later created dialogs. It is recommended to use the root component of your application for this (`App.vue`).
 
 ```vue
 <template>
@@ -22,16 +22,16 @@ First, anywhere inside your application and inside the `VApp` Vuetify-component,
         <VMain>
             ...
         </VMain>
-        <DialogOutlet/>    <-- This need to be INSIDE the VApp
+        <UiKitOutlet/>    <-- This need to be INSIDE the VApp
     </VApp>
 </template>
 
 <script lang="ts" setup>
-    import {DialogOutlet} from "@schwarzdavid/ui-kit";
+    import {UiKitOutlet} from "@schwarzdavid/ui-kit";
 </script>
 ```
 
-After the DialogOutlet is placed anywhere in your application, you can call one of the provided functions to create a predefined dialog in your individual components. See the documentation below.
+After the UiKitOutlet is placed anywhere in your application, you can call one of the provided functions to create a predefined dialog in your individual components. See the documentation below.
 
 ## DialogComposable::info()
 

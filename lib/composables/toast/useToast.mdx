@@ -1,0 +1,40 @@
+import {Meta, Story} from "@storybook/blocks";
+import * as ToastOutlet from "./docs/stories/ToastOutlet.stories.ts";
+import * as PresetStories from './docs/stories/PresetToasts.stories.ts'
+
+<Meta title="composables/useToast"/>
+
+# useToast
+
+<Story of={ToastOutlet.Default}/>
+
+Toast util composable to functionally show toasts.
+
+## General Usage
+
+First, anywhere inside your application and inside the `VApp` Vuetify-component, place the `UiKitOutlet`. This component renders the later created dialogs. It is recommended to use the root component of your application for this (`App.vue`).
+
+```vue
+<template>
+    <VApp>
+        <VMain>
+            ...
+        </VMain>
+        <UiKitOutlet/>    <-- This need to be INSIDE the VApp
+    </VApp>
+</template>
+
+<script lang="ts" setup>
+    import {UiKitOutlet} from "@schwarzdavid/ui-kit";
+</script>
+```
+
+After the UiKitOutlet is placed anywhere in your application, you can call one of the provided functions to create a predefined dialog in your individual components. See the documentation below.
+
+## Success/Info/Warning/Error Toasts
+
+The ToastComposable comes with four different presets.
+
+### Demo
+
+<Story of={PresetStories.Default}/>

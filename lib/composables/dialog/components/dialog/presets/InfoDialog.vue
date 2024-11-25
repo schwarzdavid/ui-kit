@@ -35,71 +35,71 @@
 </template>
 
 <script lang="ts" setup generic="T">
-import { computed, ref } from 'vue'
-import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
-import { merge } from 'lodash'
-import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
-import type {
-    InfoDialogActionCta,
-    InfoDialogComponentContent,
-    InfoDialogCta,
-    InfoDialogProps,
-    InfoDialogTextContent,
-    InfoDialogValueCta,
-} from '../../../presets/InfoDialogProps'
-import type { DialogComponentEmits } from '../../../types/DialogComponent'
+    import { computed, ref } from 'vue'
+    import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
+    import { merge } from 'lodash'
+    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
+    import type {
+        InfoDialogActionCta,
+        InfoDialogComponentContent,
+        InfoDialogCta,
+        InfoDialogProps,
+        InfoDialogTextContent,
+        InfoDialogValueCta,
+    } from '../../../presets/InfoDialogProps'
+    import type { DialogComponentEmits } from '../../../types/DialogComponent'
 
-const props = defineProps<{ data: InfoDialogProps<T> }>()
-const emit = defineEmits<DialogComponentEmits<T | null>>()
+    const props = defineProps<{ data: InfoDialogProps<T> }>()
+    const emit = defineEmits<DialogComponentEmits<T | null>>()
 
-const DEFAULT_MAX_WIDTH = 650
-const DEFAULT_CTA: InfoDialogValueCta<null> = {
-    text: 'APP.CLOSE',
-    translateText: true,
-    value: null,
-}
+    const DEFAULT_MAX_WIDTH = 650
+    const DEFAULT_CTA: InfoDialogValueCta<null> = {
+        text: 'APP.CLOSE',
+        translateText: true,
+        value: null,
+    }
 
-let resolveValue: T | null = null
+    let resolveValue: T | null = null
 
-const dialogModel = ref(true)
-const textContent = computed<Pick<InfoDialogTextContent<T>, 'content' | 'translateContent'> | null>(() => Object.hasOwn(props.data, 'content')
-    ? {
+    const dialogModel = ref(true)
+    const textContent = computed<Pick<InfoDialogTextContent<T>, 'content' | 'translateContent'> | null>(() => Object.hasOwn(props.data, 'content')
+        ? {
             content: (props.data as InfoDialogTextContent<T>).content,
             translateContent: (props.data as InfoDialogTextContent<T>).translateContent,
         }
-    : null)
-const componentContent = computed<Pick<InfoDialogComponentContent, 'component' | 'props'> | null>(() => Object.hasOwn(props.data, 'component')
-    ? {
+        : null)
+    const componentContent = computed<Pick<InfoDialogComponentContent, 'component' | 'props'> | null>(() => Object.hasOwn(props.data, 'component')
+        ? {
             component: (props.data as InfoDialogComponentContent).component,
             props: (props.data as InfoDialogComponentContent).props,
         }
-    : null)
+        : null)
 
-const defaultCta = computed<InfoDialogValueCta<null> | null>(() => props.data.defaultCta === false
-    ? null
-    : merge({}, DEFAULT_CTA, props.data.defaultCta))
+    const defaultCta = computed<InfoDialogValueCta<null> | null>(() => props.data.defaultCta === false
+        ? null
+        : merge({}, DEFAULT_CTA, props.data.defaultCta))
 
-function onCtaClick(cta: InfoDialogCta<T | null>): void {
-    if (isActionCta(cta)) {
-        cta.action()
+    function onCtaClick(cta: InfoDialogCta<T | null>): void {
+        if (isActionCta(cta)) {
+            cta.action()
+        }
+        else {
+            closeDialog(cta.value)
+        }
     }
-    else {
-        closeDialog(cta.value)
+
+    function isActionCta(cta: InfoDialogCta<unknown>): cta is InfoDialogActionCta {
+        return Object.hasOwn(cta, 'action')
     }
-}
 
-function isActionCta(cta: InfoDialogCta<unknown>): cta is InfoDialogActionCta {
-    return Object.hasOwn(cta, 'action')
-}
+    function closeDialog(value: T | null = null): void {
+        resolveValue = value
+        dialogModel.value = false
+    }
 
-function closeDialog(value: T | null = null): void {
-    resolveValue = value
-    dialogModel.value = false
-}
-
-function resolveDialog(): void {
-    emit('resolve', resolveValue)
-}
+    function resolveDialog(): void {
+        emit('resolve', resolveValue)
+    }
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
-import DialogOutlet from '@/composables/dialog/components/dialog/DialogOutlet.vue'
+import UiKitOutlet from '@/components/UiKitOutlet.vue'
 
 // Dialog
-export { DialogOutlet }
+export { UiKitOutlet }
 export * from '@/composables/dialog/useDialog'
 export * from '@/composables/dialog/presets/ConfirmDialogProps'
 export * from '@/composables/dialog/presets/InfoDialogProps'

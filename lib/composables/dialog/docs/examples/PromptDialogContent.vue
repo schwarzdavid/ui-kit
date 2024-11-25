@@ -5,11 +5,11 @@
 </template>
 
 <script lang="ts" setup>
-import { VCardItem } from 'vuetify/components'
+    import { VCardItem } from 'vuetify/components'
 
-defineProps<{
-    label: string
-}>()
+    defineProps<{
+        label: string
+    }>()
 
-const model = defineModel<Record<string, string>>({ required: true })
+    const model = defineModel<Record<string, string>>({ required: true })
 </script>

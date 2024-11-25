@@ -11,34 +11,35 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { useDialog } from '../../useDialog'
-import { PromptDialogSize } from '../../presets/PromptDialogProps'
-import PromptDialogContent from './PromptDialogContent.vue'
-import PromptDialogLargeContent from './PromptDialogLargeContent.vue'
+    import { ref } from 'vue'
+    import { useDialog } from '../../useDialog'
+    import { PromptDialogSize } from '../../presets/PromptDialogProps'
+    import PromptDialogContent from './PromptDialogContent.vue'
+    import PromptDialogLargeContent from './PromptDialogLargeContent.vue'
+    import { VBtn } from 'vuetify/components'
 
-const dialog = useDialog()
-const result = ref<unknown>(null)
+    const dialog = useDialog()
+    const result = ref<unknown>(null)
 
-async function openPromptDialog(): Promise<void> {
-    result.value = await dialog.prompt({
-        component: PromptDialogContent,
-        props: {
-            label: 'Example translated input',
-        },
-        initialValue: {},
-        title: 'Testprompt',
-        translateTitle: false,
-    })
-}
+    async function openPromptDialog(): Promise<void> {
+        result.value = await dialog.prompt({
+            component: PromptDialogContent,
+            props: {
+                label: 'Example translated input',
+            },
+            initialValue: {},
+            title: 'Testprompt',
+            translateTitle: false,
+        })
+    }
 
-async function openLargePromptDialog(): Promise<void> {
-    result.value = await dialog.prompt({
-        component: PromptDialogLargeContent,
-        props: {},
-        title: 'Large prompt',
-        translateTitle: false,
-        size: PromptDialogSize.LARGE,
-    })
-}
+    async function openLargePromptDialog(): Promise<void> {
+        result.value = await dialog.prompt({
+            component: PromptDialogLargeContent,
+            props: {},
+            title: 'Large prompt',
+            translateTitle: false,
+            size: PromptDialogSize.LARGE,
+        })
+    }
 </script>

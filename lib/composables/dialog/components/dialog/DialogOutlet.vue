@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useDialogQueue } from '../../internal/useDialogQueue'
+    import { useDialogQueue } from '../../internal/useDialogQueue'
 
-const { queue } = useDialogQueue()
+    const { queue } = useDialogQueue()
 </script>

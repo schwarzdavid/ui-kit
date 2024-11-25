@@ -33,13 +33,13 @@
 </template>
 
 <script lang="ts" setup>
-import { VBtn, VRow, VCol, VSkeletonLoader } from 'vuetify/components'
-import { useDisplay } from 'vuetify'
+    import { VBtn, VRow, VCol, VSkeletonLoader } from 'vuetify/components'
+    import { useDisplay } from 'vuetify'
 
-defineProps<{
-    toolbar: HTMLElement
-}>()
+    defineProps<{
+        toolbar: HTMLElement
+    }>()
 
-const model = defineModel<number>()
-const { mobile } = useDisplay()
+    const model = defineModel<number>()
+    const { mobile } = useDisplay()
 </script>

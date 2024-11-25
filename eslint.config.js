@@ -40,6 +40,12 @@ export default [
                 extraFileExtensions: ['.vue'],
             },
         },
+        rules: {
+            'vue/script-indent': ['error', 4, {
+                baseIndent: 1,
+            }],
+            '@stylistic/indent': 'off',
+        },
     },
     {
         files: ['**/*.js'],
