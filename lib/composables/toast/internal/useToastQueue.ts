@@ -25,7 +25,7 @@ export function useToastQueue(): ToastQueue {
         }
 
         const fullEntry: ToastQueueEntry = markRaw({ ...entry, id, resolve })
-        toastQueue.value.push(fullEntry)
+        toastQueue.value.unshift(fullEntry)
         return fullEntry
     }
 

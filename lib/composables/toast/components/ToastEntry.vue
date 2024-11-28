@@ -1,23 +1,29 @@
 <template>
-    <VSnackbar :timeout="entry.timeout" v-model="snackbarModel" location-strategy="connected" target="parent" attach timer location="bottom center">{{entry.message}}</VSnackbar>
+    <VAlert theme="dark" class="toast-entry">{{entry.message}}</VAlert>
 </template>
 
 <script lang="ts" setup>
     import type { ToastQueueEntry } from '@/composables/toast/types/TaostQueueEntry'
-    import { ref, watch } from 'vue'
+    import { onMounted, ref } from 'vue'
     import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
-    import { VSnackbar } from 'vuetify/components'
+    import { VAlert } from 'vuetify/components'
 
     const props = defineProps<{
         entry: ToastQueueEntry
     }>()
 
-    const snackbarModel = ref(true)
     const toastQueue = useToastQueue()
+    const timeoutId = ref<number | null>(null)
 
-    watch(snackbarModel, () => {
-        setTimeout(() => {
+    onMounted(() => {
+        timeoutId.value = window.setTimeout(() => {
             toastQueue.removeFromQueue(props.entry.id)
-        }, 1000)
+        }, props.entry.timeout)
     })
 </script>
+
+<style lang="scss" scoped>
+.toast-entry {
+    pointer-events: all;
+}
+</style>
