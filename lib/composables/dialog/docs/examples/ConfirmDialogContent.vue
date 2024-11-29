@@ -6,5 +6,5 @@
 </template>
 
 <script lang="ts" setup>
-    import { VIcon, VCardText } from 'vuetify/components'
+    import { VCardText, VIcon } from 'vuetify/components'
 </script>

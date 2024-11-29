@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { VBtn, VRow, VCol, VSkeletonLoader } from 'vuetify/components'
+    import { VBtn, VCol, VRow, VSkeletonLoader } from 'vuetify/components'
     import { useDisplay } from 'vuetify'
 
     defineProps<{
