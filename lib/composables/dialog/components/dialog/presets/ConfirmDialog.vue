@@ -56,11 +56,11 @@
 
     const DEFAULT_MAX_WIDTH = 550
     const DEFAULT_CONFIRM_CTA: ConfirmDialogCta = {
-        text: 'APP.YES',
+        text: 'common.yes',
         translateText: true,
     }
     const DEFAULT_REJECT_CTA: ConfirmDialogCta = {
-        text: 'APP.NO',
+        text: 'common.no',
         translateText: true,
     }
 
