@@ -1,5 +1,5 @@
 <template>
-    <VAlert theme="dark" class="toast-entry">{{entry.message}}</VAlert>
+    <VAlert theme="dark" class="toast-entry" closable @click:close="closeToast">{{entry.message}}</VAlert>
 </template>
 
 <script lang="ts" setup>
@@ -13,11 +13,16 @@
     }>()
 
     const toastQueue = useToastQueue()
-    const timeoutId = ref<number | null>(null)
+    const timeoutId = ref<number>(-1)
+
+    function closeToast() {
+        window.clearTimeout(timeoutId.value)
+        toastQueue.removeFromQueue(props.entry.id)
+    }
 
     onMounted(() => {
         timeoutId.value = window.setTimeout(() => {
-            toastQueue.removeFromQueue(props.entry.id)
+            closeToast()
         }, props.entry.timeout)
     })
 </script>

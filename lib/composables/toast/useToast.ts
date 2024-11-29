@@ -16,7 +16,7 @@ export function useToast(): ToastComposable {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: 40000,
+                timeout: 4000,
                 type: ToastType.INFO,
             })
         })
