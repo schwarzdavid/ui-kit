@@ -1,5 +1,7 @@
-import { type MaybeRefOrGetter, readonly, type Ref, ref, toValue } from 'vue'
+import { readonly, type Ref, ref } from 'vue'
 import { useLoadingOverlay } from '@/composables/loading-overlay/useLoadingOverlay'
+import type { PluginLoadingOptions } from '@/plugin/types/PluginOptions'
+import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadingAction = (...args: any) => any | Promise<any>
@@ -9,31 +11,42 @@ export interface LoadingComposable<A extends LoadingAction> {
     action(...args: Parameters<A>): Promise<Awaited<ReturnType<A>>>
 }
 
-export interface LoadingOptions {
-    overlay: MaybeRefOrGetter<boolean>
+function timeout(millis?: number | false): Promise<void> {
+    if (!millis) {
+        return Promise.resolve()
+    }
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve()
+        }, millis)
+    })
 }
 
-export function useLoading<A extends LoadingAction>(actionCallback: A, { overlay }: Partial<LoadingOptions> = {}): LoadingComposable<A> {
+export function useLoading<A extends LoadingAction>(actionCallback: A, options: Partial<PluginLoadingOptions> = {}): LoadingComposable<A> {
+    const { loading: { delay, overlay } } = usePluginOptions({ loading: options })
     const loading = ref(false)
     const isOverlayActive = useLoadingOverlay()
 
     async function action(...args: Parameters<A>): Promise<Awaited<ReturnType<A>>> {
-        const showOverlay = toValue(overlay)
         loading.value = true
 
-        if (showOverlay) {
+        if (overlay) {
             isOverlayActive.value = true
         }
 
         try {
-            return await actionCallback(...args)
+            const [result] = await Promise.all([
+                actionCallback(...args),
+                timeout(delay),
+            ])
+            return result
         }
         catch (err) {
             throw err
         }
         finally {
             loading.value = false
-            if (showOverlay) {
+            if (overlay) {
                 isOverlayActive.value = false
             }
         }
