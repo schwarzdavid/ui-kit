@@ -1,17 +1,22 @@
 import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
 import { ToastType } from '@/composables/toast/types/ToastType'
 
+export interface ToastOptions {
+    timeout: number
+    translateMessage: boolean
+}
+
 export interface ToastComposable {
-    info(message: string): Promise<void>
-    warn(message: string): Promise<void>
-    error(message: string): Promise<void>
-    success(message: string): Promise<void>
+    info(message: string, options?: Partial<ToastOptions>): Promise<void>
+    warn(message: string, options?: Partial<ToastOptions>): Promise<void>
+    error(message: string, options?: Partial<ToastOptions>): Promise<void>
+    success(message: string, options?: Partial<ToastOptions>): Promise<void>
 }
 
 export function useToast(): ToastComposable {
     const toastQueue = useToastQueue()
 
-    function info(message: string): Promise<void> {
+    function info(message: string, options?: Partial<ToastOptions>): Promise<void> {
         return new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,
@@ -22,7 +27,7 @@ export function useToast(): ToastComposable {
         })
     }
 
-    function warn(message: string): Promise<void> {
+    function warn(message: string, options?: Partial<ToastOptions>): Promise<void> {
         return new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,
@@ -33,7 +38,7 @@ export function useToast(): ToastComposable {
         })
     }
 
-    function error(message: string): Promise<void> {
+    function error(message: string, options?: Partial<ToastOptions>): Promise<void> {
         return new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,
@@ -44,7 +49,7 @@ export function useToast(): ToastComposable {
         })
     }
 
-    function success(message: string): Promise<void> {
+    function success(message: string, options?: Partial<ToastOptions>): Promise<void> {
         return new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,

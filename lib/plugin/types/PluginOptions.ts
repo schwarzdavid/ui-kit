@@ -21,6 +21,12 @@ export interface PluginDialogOptions {
     }
 }
 
+export interface PluginToastOptions {
+    timeout: number
+}
+
 export interface PluginOptions {
     loading: PluginLoadingOptions
+    dialog: PluginDialogOptions
+    toast: PluginToastOptions
 }
