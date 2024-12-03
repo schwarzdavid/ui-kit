@@ -6,6 +6,7 @@ import { createI18n } from 'vue-i18n'
 import '@mdi/font/css/materialdesignicons.css'
 import enMessages from './i18n/en.json'
 import { createPinia } from 'pinia'
+import { createUIKit } from '@/plugin/createUIKit'
 
 setup((app) => {
     app.use(createVuetify({
@@ -24,6 +25,7 @@ setup((app) => {
         },
     }))
     app.use(createPinia())
+    app.use(createUIKit())
     app.use(createI18n({ locale: 'en', messages: { en: enMessages } }))
 })
 

@@ -36,6 +36,12 @@
     flex-direction: column;
     row-gap: settings.$spacer * 2;
     pointer-events: none;
+
+    &--desktop {
+        left: unset;
+        max-width: 500px;
+        width: 100%;
+    }
 }
 
 .fade-move,
