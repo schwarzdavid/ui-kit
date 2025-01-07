@@ -1,5 +1,5 @@
 import type { ConfirmDialogCta } from '@/composables/dialog/presets/ConfirmDialogProps'
-import type { InfoDialogCta } from '@/composables/dialog/presets/InfoDialogProps'
+import type { InfoDialogBaseCta } from '@/composables/dialog/presets/InfoDialogProps'
 import type { PromptDialogCta } from '@/composables/dialog/presets/PromptDialogProps'
 
 export interface PluginLoadingOptions {
@@ -13,7 +13,7 @@ export interface PluginDialogOptions {
         rejectCta: ConfirmDialogCta
     }
     info: {
-        defaultCta: InfoDialogCta<null>
+        defaultCta: InfoDialogBaseCta
     }
     prompt: {
         abortCta: PromptDialogCta
