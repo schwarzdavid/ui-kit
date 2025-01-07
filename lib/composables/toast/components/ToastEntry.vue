@@ -44,7 +44,7 @@
 
     onMounted(() => {
         timeoutId.value = window.setTimeout(() => {
-            // closeToast()
+            closeToast()
         }, props.entry.timeout)
     })
 </script>
