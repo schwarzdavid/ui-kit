@@ -1,24 +1,16 @@
-import type { ConfirmDialogCta } from '@/composables/dialog/presets/ConfirmDialogProps'
-import type { InfoDialogBaseCta } from '@/composables/dialog/presets/InfoDialogProps'
-import type { PromptDialogCta } from '@/composables/dialog/presets/PromptDialogProps'
+export interface PluginI18nOptions {
+    messages: {
+        save: string
+        cancel: string
+        close: string
+        yes: string
+        no: string
+    }
+}
 
 export interface PluginLoadingOptions {
     delay: number | false
     overlay: boolean
-}
-
-export interface PluginDialogOptions {
-    confirm: {
-        confirmCta: ConfirmDialogCta
-        rejectCta: ConfirmDialogCta
-    }
-    info: {
-        defaultCta: InfoDialogBaseCta
-    }
-    prompt: {
-        abortCta: PromptDialogCta
-        saveCta: PromptDialogCta
-    }
 }
 
 export interface PluginToastOptions {
@@ -27,6 +19,6 @@ export interface PluginToastOptions {
 
 export interface PluginOptions {
     loading: PluginLoadingOptions
-    dialog: PluginDialogOptions
     toast: PluginToastOptions
+    i18n: PluginI18nOptions
 }

@@ -5,30 +5,16 @@ export const createDefaultPluginOptions = (): PluginOptions => ({
         delay: 2000,
         overlay: false,
     },
-    dialog: {
-        info: {
-            defaultCta: {
-                text: '',
-            },
-        },
-        confirm: {
-            confirmCta: {
-                text: '',
-            },
-            rejectCta: {
-                text: '',
-            },
-        },
-        prompt: {
-            abortCta: {
-                text: '',
-            },
-            saveCta: {
-                text: '',
-            },
-        },
-    },
     toast: {
         timeout: 4000,
+    },
+    i18n: {
+        messages: {
+            yes: 'common.yes',
+            no: 'common.no',
+            cancel: 'action.cancel',
+            close: 'action.close',
+            save: 'action.save',
+        },
     },
 })

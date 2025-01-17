@@ -1,10 +1,7 @@
 import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
 import { ToastType } from '@/composables/toast/types/ToastType'
-
-export interface ToastOptions {
-    timeout: number
-    translateMessage: boolean
-}
+import type { ToastOptions } from '@/composables/toast/types/ToastOptions'
+import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
 
 export interface ToastComposable {
     info(message: string, options?: Partial<ToastOptions>): Promise<void>
@@ -15,13 +12,15 @@ export interface ToastComposable {
 
 export function useToast(): ToastComposable {
     const toastQueue = useToastQueue()
+    const { toast: { timeout } } = usePluginOptions()
 
     function info(message: string, options?: Partial<ToastOptions>): Promise<void> {
         return new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: 4000,
+                timeout: options?.timeout ?? timeout,
+                translateMessage: options?.translateMessage ?? true,
                 type: ToastType.INFO,
             })
         })
@@ -32,7 +31,8 @@ export function useToast(): ToastComposable {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: 4000,
+                timeout: options?.timeout ?? timeout,
+                translateMessage: options?.translateMessage ?? true,
                 type: ToastType.WARNING,
             })
         })
@@ -43,7 +43,8 @@ export function useToast(): ToastComposable {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: 4000,
+                timeout: options?.timeout ?? timeout,
+                translateMessage: options?.translateMessage ?? true,
                 type: ToastType.ERROR,
             })
         })
@@ -54,7 +55,8 @@ export function useToast(): ToastComposable {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: 4000,
+                timeout: options?.timeout ?? timeout,
+                translateMessage: options?.translateMessage ?? true,
                 type: ToastType.SUCCESS,
             })
         })

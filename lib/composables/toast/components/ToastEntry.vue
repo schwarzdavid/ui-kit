@@ -1,6 +1,7 @@
 <template>
     <VAlert theme="dark" class="toast-entry" closable @click:close="closeToast" density="compact">
-        <span>{{entry.message}}</span>
+        <span v-if="entry.translateMessage">{{t(entry.message)}}</span>
+        <span v-else>{{entry.message}}</span>
         <template #prepend v-if="icon">
             <VIcon :icon="icon" :color="color"/>
         </template>
@@ -13,6 +14,7 @@
     import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
     import { VAlert, VIcon } from 'vuetify/components'
     import { ToastType } from '@/composables/toast/types/ToastType'
+    import { useI18n } from 'vue-i18n'
 
     const TYPE_ICON_MAP: Record<ToastType, string> = {
         [ToastType.ERROR]: 'mdi-alert-circle-outline',
@@ -36,6 +38,7 @@
     const timeoutId = ref<number>(-1)
     const icon = computed(() => TYPE_ICON_MAP[props.entry.type])
     const color = computed(() => TYPE_COLOR_MAP[props.entry.type])
+    const { t } = useI18n({ useScope: 'global' })
 
     function closeToast() {
         window.clearTimeout(timeoutId.value)

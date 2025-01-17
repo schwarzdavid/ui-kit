@@ -9,4 +9,5 @@ export interface CreateToastQueueEntry {
     timeout: number
     type: ToastType
     message: string
+    translateMessage: boolean
 }
