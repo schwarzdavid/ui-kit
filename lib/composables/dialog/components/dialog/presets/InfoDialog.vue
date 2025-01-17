@@ -48,13 +48,16 @@
         InfoDialogValueCta,
     } from '../../../presets/InfoDialogProps'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
+    import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
 
     const props = defineProps<{ data: InfoDialogProps<T> }>()
     const emit = defineEmits<DialogComponentEmits<T | null>>()
 
+    const { i18n: { messages: { close } } } = usePluginOptions()
+
     const DEFAULT_MAX_WIDTH = 650
     const DEFAULT_CTA: InfoDialogValueCta<null> = {
-        text: 'APP.CLOSE',
+        text: close,
         translateText: true,
         value: null,
     }

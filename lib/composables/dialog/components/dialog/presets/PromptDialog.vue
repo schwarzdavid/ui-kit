@@ -44,20 +44,23 @@
     import { PromptDialogSize } from '../../../presets/PromptDialogProps'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
+    import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
 
     const props = defineProps<{ data: PromptDialogProps<T, R> }>()
     const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
+
+    const { i18n: { messages: { cancel, save } } } = usePluginOptions()
 
     const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
         [PromptDialogSize.SMALL]: 650,
         [PromptDialogSize.LARGE]: 1200,
     }
     const DEFAULT_ABORT_CTA: PromptDialogCta = {
-        text: 'APP.CANCEL',
+        text: cancel,
         translateText: true,
     }
     const DEFAULT_SAVE_CTA: PromptDialogCta = {
-        text: 'APP.SAVE',
+        text: save,
         translateText: true,
     }
 
