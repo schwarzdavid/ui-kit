@@ -8,7 +8,7 @@
                 <VSpacer/>
                 <VBtn icon="mdi-close" @click="closeDialog" />
             </VToolbar>
-            <component :is="data.component" ref="formComponent" :loading="loading"/>
+            <component :is="data.component" ref="formComponent" v-model:loading="loading"/>
             <VDivider/>
             <VCardActions>
                 <VSpacer/>

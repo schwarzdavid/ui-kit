@@ -12,7 +12,7 @@
     const dialog = useDialog()
 
     async function openFormDialog() {
-        await dialog.form<string>({
+        await dialog.form({
             title: 'Dingsbums',
             component: FormDialogContent,
         })
