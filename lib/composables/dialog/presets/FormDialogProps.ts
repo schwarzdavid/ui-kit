@@ -1,18 +1,20 @@
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 import type { ComponentPublicInstance } from 'vue'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// eslint-disable-next-line
-export interface FormDialogComponentProps<T> {
+export interface FormDialogComponentProps {
+    loading: boolean
 }
 
-export type FormDialogComponent<T> = ComponentPublicInstance<FormDialogComponentProps<T>, any, any, any, any, any, any, any>
+export interface FormDialogComponentExposed<T> {
+    finish(): Promise<T>
+}
 
-export interface FormDialogProps<T> {
+export type FormDialogComponent<T> = new() => ComponentPublicInstance<FormDialogComponentProps> & FormDialogComponentExposed<T>
+
+export interface FormDialogProps<T, C extends FormDialogComponent<T> = FormDialogComponent<T>> {
     title: string
-    translateTitle: string
+    translateTitle?: string
     saveCta?: Partial<DialogCta>
     abortCta?: Partial<DialogCta>
-    component: FormDialogComponent<T>
+    component: C
 }

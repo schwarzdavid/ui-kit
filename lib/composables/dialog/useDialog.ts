@@ -8,6 +8,7 @@ import type { InfoDialogProps } from './presets/InfoDialogProps'
 import type { CreateDialogQueueEntry } from './types/DialogQueueEntry'
 import type { Component } from 'vue'
 import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
+import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialog.vue'
 
 /* eslint-disable @typescript-eslint/no-invalid-void-type */
 
@@ -101,8 +102,15 @@ export function useDialog(): DialogComposable {
     }
 
     function createFormDialog<T>(options: FormDialogProps<T>): Promise<T> {
-        console.log(options)
-        return Promise.resolve(null as unknown as T)
+        return new Promise<T>((resolve, reject) => {
+            const dialogEntry: CreateDialogQueueEntry<T> = {
+                component: FormDialog,
+                props: { data: options },
+                resolve,
+                reject,
+            }
+            dialogQueue.addToQueue(dialogEntry)
+        })
     }
 
     return {
