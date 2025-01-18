@@ -1,26 +1,12 @@
 import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
-
-export interface InfoDialogBaseCta {
-    text: string
-    translateText?: boolean
-}
-
-export interface InfoDialogActionCta extends InfoDialogBaseCta {
-    action(): unknown
-}
-
-export interface InfoDialogValueCta<T> extends InfoDialogBaseCta {
-    value: T
-}
-
-export type InfoDialogCta<T> = InfoDialogActionCta | InfoDialogValueCta<T>
+import type { InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 
 interface InfoDialogBaseProps<T> {
     title: string
     translateTitle?: boolean
-    additionalCta?: InfoDialogCta<T>[]
-    defaultCta?: Partial<InfoDialogCta<T>> | false
+    additionalCta?: InteractiveDialogCta<T>[]
+    defaultCta?: Partial<InteractiveDialogCta<T>> | false
     width?: number | string
 }
 

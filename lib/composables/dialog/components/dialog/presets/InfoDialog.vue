@@ -40,15 +40,13 @@
     import { merge } from 'lodash'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type {
-        InfoDialogActionCta,
         InfoDialogComponentContent,
-        InfoDialogCta,
         InfoDialogProps,
         InfoDialogTextContent,
-        InfoDialogValueCta,
     } from '../../../presets/InfoDialogProps'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
     import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import type { DialogActionCta, DialogValueCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: InfoDialogProps<T> }>()
     const emit = defineEmits<DialogComponentEmits<T | null>>()
@@ -56,7 +54,7 @@
     const { i18n: { messages: { close } } } = usePluginOptions()
 
     const DEFAULT_MAX_WIDTH = 650
-    const DEFAULT_CTA: InfoDialogValueCta<null> = {
+    const DEFAULT_CTA: DialogValueCta<null> = {
         text: close,
         translateText: true,
         value: null,
@@ -78,11 +76,11 @@
         }
         : null)
 
-    const defaultCta = computed<InfoDialogValueCta<null> | null>(() => props.data.defaultCta === false
+    const defaultCta = computed<DialogValueCta<null> | null>(() => props.data.defaultCta === false
         ? null
         : merge({}, DEFAULT_CTA, props.data.defaultCta))
 
-    function onCtaClick(cta: InfoDialogCta<T | null>): void {
+    function onCtaClick(cta: InteractiveDialogCta<T | null>): void {
         if (isActionCta(cta)) {
             cta.action()
         }
@@ -91,7 +89,7 @@
         }
     }
 
-    function isActionCta(cta: InfoDialogCta<unknown>): cta is InfoDialogActionCta {
+    function isActionCta(cta: InteractiveDialogCta<unknown>): cta is DialogActionCta {
         return Object.hasOwn(cta, 'action')
     }
 

@@ -40,11 +40,12 @@
     import { computed, ref, toValue } from 'vue'
     import { useDisplay } from 'vuetify'
     import { merge } from 'lodash'
-    import type { PromptDialogCta, PromptDialogProps } from '../../../presets/PromptDialogProps'
+    import type { PromptDialogProps } from '../../../presets/PromptDialogProps'
     import { PromptDialogSize } from '../../../presets/PromptDialogProps'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
     import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: PromptDialogProps<T, R> }>()
     const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
@@ -55,11 +56,11 @@
         [PromptDialogSize.SMALL]: 650,
         [PromptDialogSize.LARGE]: 1200,
     }
-    const DEFAULT_ABORT_CTA: PromptDialogCta = {
+    const DEFAULT_ABORT_CTA: DialogCta = {
         text: cancel,
         translateText: true,
     }
-    const DEFAULT_SAVE_CTA: PromptDialogCta = {
+    const DEFAULT_SAVE_CTA: DialogCta = {
         text: save,
         translateText: true,
     }

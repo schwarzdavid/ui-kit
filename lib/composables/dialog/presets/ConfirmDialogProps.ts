@@ -1,10 +1,6 @@
 import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
-
-export interface ConfirmDialogCta {
-    text: string
-    translateText?: boolean
-}
+import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
 export enum ConfirmDialogLevel {
     DEFAULT = 'primary',
@@ -15,8 +11,8 @@ export enum ConfirmDialogLevel {
 interface ConfirmDialogBaseProps {
     title: string
     translateTitle?: boolean
-    confirmCta?: Partial<ConfirmDialogCta>
-    rejectCta?: Partial<ConfirmDialogCta>
+    confirmCta?: Partial<DialogCta>
+    rejectCta?: Partial<DialogCta>
     throwOnReject?: boolean
     permanent?: boolean
     maxWidth?: number | string

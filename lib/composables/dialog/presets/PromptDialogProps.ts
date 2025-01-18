@@ -6,13 +6,9 @@ import type {
     MethodOptions,
 } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
+import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-export interface PromptDialogCta {
-    text: string
-    translateText?: boolean
-}
 
 export interface PromptDialogComponentProps<T> {
     modelValue: T | null
@@ -44,8 +40,8 @@ export interface PromptDialogProps<
 > {
     title: string
     translateTitle?: boolean
-    saveCta?: Partial<PromptDialogCta>
-    abortCta?: Partial<PromptDialogCta>
+    saveCta?: Partial<DialogCta>
+    abortCta?: Partial<DialogCta>
     initialValue?: MaybeRefOrGetter<T>
     size?: PromptDialogSize
     required?: R

@@ -7,12 +7,12 @@ import type { PromptDialogComponent, PromptDialogProps } from './presets/PromptD
 import type { InfoDialogProps } from './presets/InfoDialogProps'
 import type { CreateDialogQueueEntry } from './types/DialogQueueEntry'
 import type { Component } from 'vue'
+import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
 
 /* eslint-disable @typescript-eslint/no-invalid-void-type */
 
 export interface DialogComposable {
     info(title: string, content: string): Promise<null>
-
     info<T = void, C extends Component = Component>(options: InfoDialogProps<T, C>): Promise<T extends void ? null : (T | null)>
 
     prompt<
@@ -22,8 +22,9 @@ export interface DialogComposable {
     >(options: PromptDialogProps<T, R, C>): Promise<R extends true ? T : T | null>
 
     confirm(title: string, content: string, level?: ConfirmDialogLevel): Promise<boolean>
-
     confirm<C extends Component = Component>(options: ConfirmDialogProps<C>): Promise<boolean>
+
+    form<T>(options: FormDialogProps<T>): Promise<T>
 }
 
 export function useDialog(): DialogComposable {
@@ -99,9 +100,15 @@ export function useDialog(): DialogComposable {
         })
     }
 
+    function createFormDialog<T>(options: FormDialogProps<T>): Promise<T> {
+        console.log(options)
+        return Promise.resolve(null as unknown as T)
+    }
+
     return {
         info: createInfoDialog,
         prompt: createPromptDialog,
         confirm: createConfirmDialog,
+        form: createFormDialog,
     }
 }

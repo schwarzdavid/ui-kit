@@ -46,11 +46,11 @@
     import type { DialogComponentEmits } from '../../../types/DialogComponent.ts'
     import type {
         ConfirmDialogComponentContent,
-        ConfirmDialogCta,
         ConfirmDialogProps,
         ConfirmDialogTextContent,
     } from '../../../presets/ConfirmDialogProps'
     import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: ConfirmDialogProps }>()
     const emit = defineEmits<DialogComponentEmits<boolean>>()
@@ -58,11 +58,11 @@
     const { i18n: { messages: { yes, no } } } = usePluginOptions()
 
     const DEFAULT_MAX_WIDTH = 550
-    const DEFAULT_CONFIRM_CTA: ConfirmDialogCta = {
+    const DEFAULT_CONFIRM_CTA: DialogCta = {
         text: yes,
         translateText: true,
     }
-    const DEFAULT_REJECT_CTA: ConfirmDialogCta = {
+    const DEFAULT_REJECT_CTA: DialogCta = {
         text: no,
         translateText: true,
     }
@@ -82,8 +82,8 @@
             props: (props.data as ConfirmDialogComponentContent).props,
         }
         : null)
-    const confirmCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_CONFIRM_CTA, props.data.confirmCta))
-    const rejectCta = computed<ConfirmDialogCta>(() => merge({}, DEFAULT_REJECT_CTA, props.data.rejectCta))
+    const confirmCta = computed<DialogCta>(() => merge({}, DEFAULT_CONFIRM_CTA, props.data.confirmCta))
+    const rejectCta = computed<DialogCta>(() => merge({}, DEFAULT_REJECT_CTA, props.data.rejectCta))
     const highlightCta = computed<ConfirmDialogProps['highlightCta']>(() => props.data.highlightCta ?? 'confirm')
     const ctaColor = computed<string>(() => props.data.level ?? 'primary')
 
