@@ -4,14 +4,14 @@
 
 <script lang="ts" setup>
     import type {
-        InternalFormDialogComponentEmits,
+        FormDialogComponentEmits,
         FormDialogComponentExposed,
         FormDialogComponentProps,
     } from '@/composables/dialog/presets/FormDialogProps'
 
     defineProps<FormDialogComponentProps>()
 
-    defineEmits<InternalFormDialogComponentEmits>()
+    defineEmits<FormDialogComponentEmits>()
 
     defineExpose<FormDialogComponentExposed<string>>({
         finish(): Promise<string> {

@@ -1,11 +1,11 @@
 {
-  "APP.CLOSE": "Close",
-  "APP.LOGOUT": "Logout",
-  "common.yes": "Yes",
-  "common.no": "No",
-  "APP.CANCEL": "Cancel",
-  "APP.SAVE": "Save",
-  "APP.LANG": "Language",
-  "APP.LANG_EN": "English",
-  "APP.LANG_DE": "German"
+  "common": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "action": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  }
 }

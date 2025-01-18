@@ -1,11 +1,12 @@
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
-import type { ComponentPublicInstance, EmitFn, ShortEmitsToObject } from 'vue'
+import type { ComponentPublicInstance, EmitFn } from 'vue'
 
 export interface FormDialogComponentProps {
     loading: boolean
 }
 
-export type InternalFormDialogComponentEmits = Record<string, unknown[]> & {
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type FormDialogComponentEmits = {
     'update:loading': [boolean]
 }
 
@@ -15,7 +16,9 @@ export interface FormDialogComponentExposed<R, T = R> {
     finish(): Promise<T>
 }
 
-export type FormDialogComponent<T> = new() => ComponentPublicInstance<FormDialogComponentProps> & FormDialogComponentExposed<T> & { $emit: EmitFn<ShortEmitsToObject<InternalFormDialogComponentEmits>> }
+export type FormDialogComponent<T> = new() => Omit<ComponentPublicInstance<FormDialogComponentProps>, '$emit'> & FormDialogComponentExposed<T> & {
+    $emit: EmitFn<FormDialogComponentEmits>
+}
 
 export interface FormDialogProps<R, T = R> {
     title: string
