@@ -1,6 +1,16 @@
 <template>
-    <h1>Hi</h1>
+    <form @submit.prevent>
+
+    </form>
 </template>
+
+<script lang="ts">
+    export interface FormDialogForm {
+        name: string
+        age: number | null
+        date: Date
+    }
+</script>
 
 <script lang="ts" setup>
     import type {
@@ -8,6 +18,8 @@
         FormDialogComponentExposed,
         FormDialogComponentProps,
     } from '@/composables/dialog/presets/FormDialogProps'
+    import { ref } from 'vue'
+    import type { ValidationArgs } from '@vuelidate/core'
 
     defineProps<FormDialogComponentProps>()
 
@@ -22,7 +34,15 @@
 
     const model = defineModel('loading')
 
-    function log() {
-        console.log(model.value)
+    const state = ref<FormDialogForm>({
+        age: null,
+        date: new Date(),
+        name: '',
+    })
+
+    const rules: ValidationArgs<FormDialogForm> = {
+        age: {
+            required,
+        },
     }
 </script>
