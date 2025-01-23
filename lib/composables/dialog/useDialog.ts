@@ -25,7 +25,11 @@ export interface DialogComposable {
     confirm(title: string, content: string, level?: ConfirmDialogLevel): Promise<boolean>
     confirm<C extends Component = Component>(options: ConfirmDialogProps<C>): Promise<boolean>
 
-    form<T, R = T>(options: FormDialogProps<T, R>): Promise<R>
+    form<
+        R,
+        T = R,
+        RejectOnEmpty extends boolean = false,
+    >(options: FormDialogProps<R, T, RejectOnEmpty>): Promise<RejectOnEmpty extends true ? R : R | null>
 }
 
 export function useDialog(): DialogComposable {
@@ -40,8 +44,7 @@ export function useDialog(): DialogComposable {
                 title: titleOrData,
                 content: content ?? '',
             }
-        }
-        else {
+        } else {
             data = titleOrData
         }
 
@@ -101,9 +104,13 @@ export function useDialog(): DialogComposable {
         })
     }
 
-    function createFormDialog<T, R = T>(options: FormDialogProps<T, R>): Promise<R> {
-        return new Promise<R>((resolve, reject) => {
-            const dialogEntry: CreateDialogQueueEntry<R> = {
+    function createFormDialog<
+        R,
+        T = R,
+        RejectOnEmpty extends boolean = false,
+    >(options: FormDialogProps<R, T, RejectOnEmpty>): Promise<RejectOnEmpty extends true ? R : R | null> {
+        return new Promise<RejectOnEmpty extends true ? R : R | null>((resolve, reject) => {
+            const dialogEntry: CreateDialogQueueEntry<RejectOnEmpty extends true ? R : R | null> = {
                 component: FormDialog,
                 props: { data: options },
                 resolve,

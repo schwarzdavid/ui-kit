@@ -8,7 +8,9 @@
                 <VSpacer/>
                 <VBtn icon="mdi-close" @click="closeDialog"/>
             </VToolbar>
-            <component :is="data.component" ref="formComponent" @save="finish" v-bind="createComponentProps()"/>
+            <VDefaultsProvider :defaults="componentDefaults">
+                <component :is="data.component" ref="formComponent" @save="finish" v-bind="createComponentProps()"/>
+            </VDefaultsProvider>
             <VDivider/>
             <VCardActions>
                 <VSpacer/>
@@ -23,17 +25,17 @@
     </VDialog>
 </template>
 <script setup lang="ts" generic="R, T = R, C extends FormDialogComponent<T> = FormDialogComponent<T>">
-    import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
+    import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle, VDefaultsProvider } from 'vuetify/components'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import type { FormDialogComponent, FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
-    import { ref, useTemplateRef } from 'vue'
+    import { computed, ref, useTemplateRef } from 'vue'
     import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
     import useVuelidate from '@vuelidate/core'
     import { useLoading } from '@/composables/loading/useLoading'
     import type { ComponentProps } from 'vue-component-type-helpers'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
 
-    const props = defineProps<{ data: FormDialogProps<R, T, C> }>()
+    const props = defineProps<{ data: FormDialogProps<R, T, boolean, C> }>()
     const emit = defineEmits<DialogComponentEmits<R | null>>()
 
     const saveCta = useDialogCta(props.data.saveCta, 'save')
@@ -43,6 +45,13 @@
     const dialogModel = ref(true)
     const v = useVuelidate()
     const { loading, action } = useLoading(performAction)
+    const componentDefaults = computed(() => ({
+        global: {
+            disabled: loading.value,
+        },
+    }))
+
+    let resolveValue: R | null = null
 
     function createComponentProps(): ComponentProps<C> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,16 +66,15 @@
     }
 
     async function performAction() {
-        const result = await formComponent.value?.finish()
-        if (!result) {
-            console.warn('FormDialog: No result returned from form component.')
-            return
+        if (!formComponent.value) {
+            throw new Error('Form component not mounted')
         }
+        const result: T = await formComponent.value.finish()
         if (typeof props.data.action === 'function') {
-            const emitValue = await props.data.action(result)
-            emit('resolve', emitValue)
+            resolveValue = await props.data.action(result)
         } else {
-            emit('resolve', result as R)
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            resolveValue = result as unknown as R
         }
     }
 
@@ -75,6 +83,10 @@
     }
 
     function resolveDialog() {
-        emit('resolve', null)
+        if (props.data.rejectOnEmpty && resolveValue === null) {
+            emit('reject')
+            return
+        }
+        emit('resolve', resolveValue)
     }
 </script>

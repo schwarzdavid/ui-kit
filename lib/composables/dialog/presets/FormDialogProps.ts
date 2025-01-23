@@ -22,6 +22,7 @@ export type FormDialogComponent<T> = new() => Omit<ComponentPublicInstance, '$em
 export type FormDialogProps<
     R,
     T = R,
+    RejectOnEmpty extends boolean = false,
     C extends FormDialogComponent<T> = FormDialogComponent<T>,
     P extends object = ComponentProps<C>,
 > = DialogProps<P> & {
@@ -31,4 +32,5 @@ export type FormDialogProps<
     abortCta?: Partial<DialogCta>
     component: C
     action?: FormDialogAction<T, R>
+    rejectOnEmpty?: RejectOnEmpty
 }
