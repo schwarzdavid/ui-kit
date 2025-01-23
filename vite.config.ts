@@ -32,6 +32,7 @@ export default defineConfig({
         rollupOptions: {
             external: [
                 'vue',
+                'vuetify',
                 'vuetify/components',
                 'vue-router',
                 'pinia',
