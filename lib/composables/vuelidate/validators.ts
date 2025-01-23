@@ -1,13 +1,14 @@
 import * as validators from '@vuelidate/validators'
 import { helpers } from '@vuelidate/validators'
-// import { i18n } from '@/plugins/i18n'
-
-// eslint-disable-next-line
-const i18n: any = null
+import { useI18n } from 'vue-i18n'
 
 const withI18nMessage = validators.createI18nMessage({
-    t: i18n?.global.t,
+    t: (...args) => {
+        const { t } = useI18n({ useScope: 'global' })
+        return t(...args)
+    },
     messagePath(params) {
+        console.log(params.$validator)
         return 'validation.' + params.$validator
     },
 })

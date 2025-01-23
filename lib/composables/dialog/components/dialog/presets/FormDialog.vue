@@ -1,7 +1,7 @@
 <template>
-    <VDialog v-model="dialogModel" @after-leave="resolveDialog">
+    <VDialog v-model="dialogModel" @after-leave="resolveDialog" max-width="1200" scrollable>
         <VCard>
-            <VToolbar>
+            <VToolbar color="primary">
                 <VToolbarTitle>
                     <MaybeTranslation :content="data.title" :translate="!!data.translateTitle"/>
                 </VToolbarTitle>
@@ -12,8 +12,12 @@
             <VDivider/>
             <VCardActions>
                 <VSpacer/>
-                <VBtn>Hi</VBtn>
-                <VBtn @click="finish">Test</VBtn>
+                <VBtn @click="closeDialog" color="primary">
+                    <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText"/>
+                </VBtn>
+                <VBtn @click="finish" variant="elevated" color="primary">
+                    <MaybeTranslation :translate="saveCta.translateText" :content="saveCta.text" />
+                </VBtn>
             </VCardActions>
         </VCard>
     </VDialog>
@@ -27,9 +31,13 @@
     import useVuelidate from '@vuelidate/core'
     import { useLoading } from '@/composables/loading/useLoading'
     import type { ComponentProps } from 'vue-component-type-helpers'
+    import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
 
     const props = defineProps<{ data: FormDialogProps<R, T, C> }>()
     const emit = defineEmits<DialogComponentEmits<R | null>>()
+
+    const saveCta = useDialogCta(props.data.saveCta, 'save')
+    const abortCta = useDialogCta(props.data.abortCta, 'cancel')
 
     const formComponent = useTemplateRef<InstanceType<FormDialogComponent<T>>>('formComponent')
     const dialogModel = ref(true)

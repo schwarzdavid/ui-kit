@@ -1,11 +1,7 @@
+export type PluginI18nMessageKey = 'save' | 'cancel' | 'close' | 'yes' | 'no'
+
 export interface PluginI18nOptions {
-    messages: {
-        save: string
-        cancel: string
-        close: string
-        yes: string
-        no: string
-    }
+    messages: Record<PluginI18nMessageKey, string>
 }
 
 export interface PluginLoadingOptions {

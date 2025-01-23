@@ -39,31 +39,22 @@
     import type { UnwrapRef } from 'vue'
     import { computed, ref, toValue } from 'vue'
     import { useDisplay } from 'vuetify'
-    import { merge } from 'lodash'
     import type { PromptDialogComponent, PromptDialogProps } from '../../../presets/PromptDialogProps'
     import { PromptDialogSize } from '../../../presets/PromptDialogProps'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
-    import { usePluginContext } from '@/plugin/composables/usePluginContext'
-    import type { DialogCta } from '@/composables/dialog/types/DialogCta'
+    import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
 
     const props = defineProps<{ data: PromptDialogProps<T, R> }>()
     const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
-
-    const { options: { i18n: { messages: { cancel, save } } } } = usePluginContext()
 
     const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
         [PromptDialogSize.SMALL]: 650,
         [PromptDialogSize.LARGE]: 1200,
     }
-    const DEFAULT_ABORT_CTA: DialogCta = {
-        text: cancel,
-        translateText: true,
-    }
-    const DEFAULT_SAVE_CTA: DialogCta = {
-        text: save,
-        translateText: true,
-    }
+
+    const saveCta = useDialogCta(props.data.saveCta, 'save')
+    const abortCta = useDialogCta(props.data.abortCta, 'cancel')
 
     const dialogModel = ref(true)
     const resolveValue = ref<T | null>(toValue(props.data.initialValue) ?? null)
@@ -72,8 +63,6 @@
     const isSaveDisabled = computed(() => props.data.required && !resolveValue.value)
     const maxWidth = computed(() => MAX_WIDTH_MAP[props.data.size ?? PromptDialogSize.SMALL])
     const fullscreen = computed(() => props.data.size === PromptDialogSize.LARGE ? mobile.value : false)
-    const abortCta = computed(() => merge({}, DEFAULT_ABORT_CTA, props.data.abortCta))
-    const saveCta = computed(() => merge({}, DEFAULT_SAVE_CTA, props.data.saveCta))
     const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
 
     function createComponentProps(): object {
