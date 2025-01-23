@@ -83,8 +83,7 @@
     function onCtaClick(cta: InteractiveDialogCta<T | null>): void {
         if (isActionCta(cta)) {
             cta.action()
-        }
-        else {
+        } else {
             closeDialog(cta.value)
         }
     }

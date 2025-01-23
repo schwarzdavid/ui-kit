@@ -22,6 +22,7 @@ function timeout(millis?: number | false): Promise<void> {
     })
 }
 
+// eslint-disable-next-line
 export function useLoading<A extends LoadingAction>(actionCallback: A, options: Partial<PluginLoadingOptions> = {}): LoadingComposable<A> {
     const { options: { loading: { delay, overlay } } } = usePluginContext()
     const loading = ref(false)
@@ -40,11 +41,9 @@ export function useLoading<A extends LoadingAction>(actionCallback: A, options: 
                 timeout(delay),
             ])
             return result
-        }
-        catch (err) {
+        } catch (err) {
             throw err
-        }
-        finally {
+        } finally {
             loading.value = false
             if (overlay) {
                 isOverlayActive.value = false
