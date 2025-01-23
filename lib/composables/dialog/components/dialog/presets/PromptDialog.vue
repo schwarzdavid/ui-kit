@@ -16,7 +16,7 @@
             </VToolbar>
             <component
                 :is="data.component"
-                v-bind="data.props"
+                v-bind="createComponentProps()"
                 v-if="toolbar"
                 v-model="resolveValue"
                 :toolbar="toolbar" />
@@ -34,13 +34,13 @@
     </VDialog>
 </template>
 
-<script lang="ts" setup generic="T, R extends boolean">
+<script lang="ts" setup generic="T, R extends boolean, C extends PromptDialogComponent<T> = PromptDialogComponent<T>">
     import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
     import type { UnwrapRef } from 'vue'
     import { computed, ref, toValue } from 'vue'
     import { useDisplay } from 'vuetify'
     import { merge } from 'lodash'
-    import type { PromptDialogProps } from '../../../presets/PromptDialogProps'
+    import type { PromptDialogComponent, PromptDialogProps } from '../../../presets/PromptDialogProps'
     import { PromptDialogSize } from '../../../presets/PromptDialogProps'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
@@ -75,6 +75,11 @@
     const abortCta = computed(() => merge({}, DEFAULT_ABORT_CTA, props.data.abortCta))
     const saveCta = computed(() => merge({}, DEFAULT_SAVE_CTA, props.data.saveCta))
     const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
+
+    function createComponentProps(): object {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (props.data as any).props ?? {}
+    }
 
     function closeDialog(): void {
         resolveValue.value = (toValue(props.data.initialValue) ?? null) as UnwrapRef<T> | null

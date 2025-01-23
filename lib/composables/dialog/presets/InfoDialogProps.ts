@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import type { InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
+import type { DialogProps } from '@/composables/dialog/types/DialogProps'
 
 interface InfoDialogBaseProps<T> {
     title: string
@@ -15,9 +16,8 @@ export interface InfoDialogTextContent<T> extends InfoDialogBaseProps<T> {
     translateContent?: boolean
 }
 
-export interface InfoDialogComponentContent<T = void, C extends Component = Component> extends InfoDialogBaseProps<T> {
+export type InfoDialogComponentContent<T = void, C extends Component = Component> = DialogProps<ComponentProps<C>> & InfoDialogBaseProps<T> & {
     component: C
-    props: ComponentProps<C>
 }
 
 export type InfoDialogProps<T = void, C extends Component = Component> = InfoDialogComponentContent<T, C> | InfoDialogTextContent<T>

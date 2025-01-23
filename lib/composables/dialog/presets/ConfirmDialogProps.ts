@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
+import type { DialogProps } from '@/composables/dialog/types/DialogProps'
 
 export enum ConfirmDialogLevel {
     DEFAULT = 'primary',
@@ -25,9 +26,8 @@ export interface ConfirmDialogTextContent extends ConfirmDialogBaseProps {
     translateContent?: boolean
 }
 
-export interface ConfirmDialogComponentContent<C extends Component = Component> extends ConfirmDialogBaseProps {
+export type ConfirmDialogComponentContent<C extends Component = Component> = DialogProps<ComponentProps<C>> & ConfirmDialogBaseProps & {
     component: C
-    props: ComponentProps<C>
 }
 
 export type ConfirmDialogProps<C extends Component = Component> = ConfirmDialogComponentContent<C> | ConfirmDialogTextContent

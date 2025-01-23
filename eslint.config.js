@@ -17,6 +17,7 @@ export default [
     stylistic.configs.customize({
         indent: 4,
         quotes: 'single',
+        braceStyle: '1tbs',
     }),
     {
         ...vitest.configs.recommended,

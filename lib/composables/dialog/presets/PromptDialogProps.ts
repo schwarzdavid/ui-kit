@@ -7,6 +7,7 @@ import type {
 } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
+import type { DialogProps } from '@/composables/dialog/types/DialogProps'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,11 +34,11 @@ export enum PromptDialogSize {
     LARGE = 'lg',
 }
 
-export interface PromptDialogProps<
+export type PromptDialogProps<
     T,
     R extends boolean = false,
     C extends PromptDialogComponent<T> = PromptDialogComponent<T>,
-> {
+> = DialogProps<Omit<ComponentProps<C>, keyof PromptDialogComponentProps<T>>> & {
     title: string
     translateTitle?: boolean
     saveCta?: Partial<DialogCta>
@@ -46,5 +47,4 @@ export interface PromptDialogProps<
     size?: PromptDialogSize
     required?: R
     component: C
-    props: Omit<ComponentProps<C>, keyof PromptDialogComponentProps<T>>
 }

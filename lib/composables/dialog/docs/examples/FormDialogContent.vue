@@ -1,9 +1,11 @@
 <template>
-    <form @submit.prevent>
-        <VTextField v-model="v.name.$model" label="Name"/>
-        <VTextField v-model.number="v.age.$model" label="Name" type="number"/>
-        <VDatePicker v-model="v.date.$model" label="Date" />
-    </form>
+    <VCardText>
+        <form @submit.prevent>
+            <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error"/>
+            <VTextField v-model.number="v.age.$model" label="Name" type="number"  :error="v.age.$error"/>
+            <VDateInput v-model="v.date.$model" label="Date"  :error="v.date.$error"/>
+        </form>
+    </VCardText>
 </template>
 
 <script lang="ts">
@@ -18,13 +20,12 @@
     import type {
         FormDialogComponentEmits,
         FormDialogComponentExposed,
-        FormDialogComponentProps,
     } from '@/composables/dialog/presets/FormDialogProps'
     import { ref } from 'vue'
     import useVuelidate, { type ValidationArgs } from '@vuelidate/core'
     import { maxLength, minLength, required } from '@/composables/vuelidate/validators'
-
-    defineProps<FormDialogComponentProps>()
+    import { VTextField, VCardText } from 'vuetify/components'
+    import { VDateInput } from 'vuetify/labs/components'
 
     defineEmits<FormDialogComponentEmits>()
 
@@ -34,8 +35,6 @@
             return Promise.resolve('Hi')
         },
     })
-
-    const model = defineModel('loading')
 
     const state = ref<FormDialogForm>({
         age: null,
