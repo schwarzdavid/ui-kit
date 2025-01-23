@@ -10,7 +10,8 @@
     "build:docs": "storybook build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepublishOnly": "npm run build:lib"
+    "prepublishOnly": "npm run build:lib",
+    "update:version": "npm version prerelease --preid alpha"
   },
   "author": "David Schwarz <david@ists-wurscht.at>",
   "license": "Apache-2.0",
