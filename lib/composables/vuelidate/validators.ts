@@ -1,9 +1,12 @@
 import * as validators from '@vuelidate/validators'
 import { helpers } from '@vuelidate/validators'
-import { i18n } from '@/plugins/i18n'
+// import { i18n } from '@/plugins/i18n'
+
+// eslint-disable-next-line
+const i18n: any = null
 
 const withI18nMessage = validators.createI18nMessage({
-    t: i18n.global.t,
+    t: i18n?.global.t,
     messagePath(params) {
         return 'validation.' + params.$validator
     },

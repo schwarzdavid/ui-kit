@@ -45,13 +45,13 @@
         InfoDialogTextContent,
     } from '../../../presets/InfoDialogProps'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
-    import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import { usePluginContext } from '@/plugin/composables/usePluginContext'
     import type { DialogActionCta, DialogValueCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: InfoDialogProps<T> }>()
     const emit = defineEmits<DialogComponentEmits<T | null>>()
 
-    const { i18n: { messages: { close } } } = usePluginOptions()
+    const { options: { i18n: { messages: { close } } } } = usePluginContext()
 
     const DEFAULT_MAX_WIDTH = 650
     const DEFAULT_CTA: DialogValueCta<null> = {

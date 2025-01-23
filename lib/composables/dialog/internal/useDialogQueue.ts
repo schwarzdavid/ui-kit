@@ -1,11 +1,12 @@
-import { markRaw, readonly, ref } from 'vue'
+import { markRaw, readonly } from 'vue'
 import { v4 } from 'uuid'
 import type { DialogQueue } from '../types/DialogQueue'
 import type { CreateDialogQueueEntry, DialogQueueEntry } from '../types/DialogQueueEntry'
-
-const dialogQueue = ref<DialogQueueEntry[]>([])
+import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 export function useDialogQueue(): DialogQueue {
+    const { dialogQueue } = usePluginContext()
+
     function generateId(): string {
         let uuid: string
         while (true) {

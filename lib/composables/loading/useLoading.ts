@@ -1,7 +1,7 @@
 import { readonly, type Ref, ref } from 'vue'
 import { useLoadingOverlay } from '@/composables/loading-overlay/useLoadingOverlay'
 import type { PluginLoadingOptions } from '@/plugin/types/PluginOptions'
-import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadingAction = (...args: any) => any | Promise<any>
@@ -23,7 +23,7 @@ function timeout(millis?: number | false): Promise<void> {
 }
 
 export function useLoading<A extends LoadingAction>(actionCallback: A, options: Partial<PluginLoadingOptions> = {}): LoadingComposable<A> {
-    const { loading: { delay, overlay } } = usePluginOptions({ loading: options })
+    const { options: { loading: { delay, overlay } } } = usePluginContext()
     const loading = ref(false)
     const isOverlayActive = useLoadingOverlay()
 

@@ -49,13 +49,13 @@
         ConfirmDialogProps,
         ConfirmDialogTextContent,
     } from '../../../presets/ConfirmDialogProps'
-    import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import { usePluginContext } from '@/plugin/composables/usePluginContext'
     import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: ConfirmDialogProps }>()
     const emit = defineEmits<DialogComponentEmits<boolean>>()
 
-    const { i18n: { messages: { yes, no } } } = usePluginOptions()
+    const { options: { i18n: { messages: { yes, no } } } } = usePluginContext()
 
     const DEFAULT_MAX_WIDTH = 550
     const DEFAULT_CONFIRM_CTA: DialogCta = {

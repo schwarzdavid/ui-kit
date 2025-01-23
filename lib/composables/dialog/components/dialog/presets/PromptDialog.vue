@@ -44,13 +44,13 @@
     import { PromptDialogSize } from '../../../presets/PromptDialogProps'
     import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
     import type { DialogComponentEmits } from '../../../types/DialogComponent'
-    import { usePluginOptions } from '@/plugin/composables/usePluginOptions'
+    import { usePluginContext } from '@/plugin/composables/usePluginContext'
     import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: PromptDialogProps<T, R> }>()
     const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
 
-    const { i18n: { messages: { cancel, save } } } = usePluginOptions()
+    const { options: { i18n: { messages: { cancel, save } } } } = usePluginContext()
 
     const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
         [PromptDialogSize.SMALL]: 650,

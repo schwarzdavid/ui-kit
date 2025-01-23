@@ -1,6 +1,8 @@
 <template>
     <form @submit.prevent>
-
+        <VTextField v-model="v.name.$model" label="Name"/>
+        <VTextField v-model.number="v.age.$model" label="Name" type="number"/>
+        <VDatePicker v-model="v.date.$model" label="Date" />
     </form>
 </template>
 
@@ -19,7 +21,8 @@
         FormDialogComponentProps,
     } from '@/composables/dialog/presets/FormDialogProps'
     import { ref } from 'vue'
-    import type { ValidationArgs } from '@vuelidate/core'
+    import useVuelidate, { type ValidationArgs } from '@vuelidate/core'
+    import { maxLength, minLength, required } from '@/composables/vuelidate/validators'
 
     defineProps<FormDialogComponentProps>()
 
@@ -41,8 +44,18 @@
     })
 
     const rules: ValidationArgs<FormDialogForm> = {
+        name: {
+            required,
+            minLength: minLength(5),
+            maxLength: maxLength(8),
+        },
+        date: {
+            required,
+        },
         age: {
             required,
         },
     }
+
+    const v = useVuelidate(rules, state)
 </script>

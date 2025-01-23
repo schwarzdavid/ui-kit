@@ -1,11 +1,12 @@
 import type { ToastQueue } from '@/composables/toast/types/ToastQueue'
 import { v4 } from 'uuid'
-import { markRaw, readonly, ref } from 'vue'
+import { markRaw, readonly } from 'vue'
 import type { CreateToastQueueEntry, ToastQueueEntry } from '@/composables/toast/types/TaostQueueEntry'
-
-const toastQueue = ref<ToastQueueEntry[]>([])
+import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 export function useToastQueue(): ToastQueue {
+    const { toastQueue } = usePluginContext()
+
     function generateId(): string {
         let uuid: string
         while (true) {
