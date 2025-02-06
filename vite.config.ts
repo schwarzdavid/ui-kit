@@ -24,9 +24,11 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: resolve(__dirname, 'lib/main.ts'),
+            entry: {
+                main: resolve(__dirname, 'lib/main.ts'),
+                validators: resolve(__dirname, 'lib/validators.ts'),
+            },
             formats: ['es'],
-            fileName: 'ui-kit',
             name: 'UiKit',
         },
         rollupOptions: {
@@ -40,14 +42,8 @@ export default defineConfig({
                 '@vuelidate/core',
                 '@vuelidate/validators',
                 'lodash',
+                '@/main',
             ],
-        },
-    },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                api: 'modern',
-            },
         },
     },
 })
