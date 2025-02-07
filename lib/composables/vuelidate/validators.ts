@@ -1,6 +1,9 @@
 import * as validators from '@vuelidate/validators'
 import { helpers } from '@vuelidate/validators'
 import { useI18n } from 'vue-i18n'
+import { usePluginContext } from '@/plugin/composables/usePluginContext.ts'
+import type { PluginI18nValidationTransform } from '@/plugin/types/PluginOptions.ts'
+import { camelCase, kebabCase, snakeCase, upperFirst } from 'lodash'
 
 const withI18nMessage = validators.createI18nMessage({
     t: (...args) => {
@@ -8,10 +11,29 @@ const withI18nMessage = validators.createI18nMessage({
         return t(...args)
     },
     messagePath(params) {
-        console.log(params.$validator)
-        return 'validation.' + params.$validator
+        const { options: { i18n: { validation: options } } } = usePluginContext()
+        if (typeof options === 'function') {
+            return options(params.$validator)
+        }
+        const validator = transformValidator(params.$validator, options.transform)
+        return `${options.prefix}.${validator}`
     },
 })
+
+function transformValidator(validator: string, transform: PluginI18nValidationTransform): string {
+    switch (transform) {
+        case 'camelCase':
+            return camelCase(validator)
+        case 'kebab-case':
+            return kebabCase(validator)
+        case 'snake_case':
+            return snakeCase(validator)
+        case 'PascalCase':
+            return upperFirst(camelCase(validator))
+        default:
+            return validator
+    }
+}
 
 export const required = withI18nMessage(validators.required)
 export const requiredIf = withI18nMessage(validators.requiredIf, { withArguments: true })
