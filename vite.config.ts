@@ -42,7 +42,6 @@ export default defineConfig({
                 '@vuelidate/core',
                 '@vuelidate/validators',
                 'lodash',
-                '@/main',
             ],
         },
     },
