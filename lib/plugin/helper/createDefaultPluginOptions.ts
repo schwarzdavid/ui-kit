@@ -16,9 +16,5 @@ export const createDefaultPluginOptions = (): PluginOptions => ({
             close: 'action.close',
             save: 'action.save',
         },
-        validation: {
-            prefix: 'validation',
-            transform: 'none',
-        },
     },
 })

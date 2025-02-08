@@ -1,26 +1,54 @@
 import * as validators from '@vuelidate/validators'
-import { helpers } from '@vuelidate/validators'
-import { useI18n } from 'vue-i18n'
-import { usePluginContext } from '@/plugin/composables/usePluginContext.ts'
-import type { PluginI18nValidationTransform } from '@/plugin/types/PluginOptions.ts'
-import { camelCase, kebabCase, snakeCase, upperFirst } from 'lodash'
+import { helpers, TranslationFunction } from '@vuelidate/validators'
+import { assign, camelCase, clone, kebabCase, snakeCase, upperFirst } from 'lodash'
+import type { PartialDeep } from 'type-fest'
+
+export type ValidationTranslationFn = (validatorName: string) => string
+
+export type ValidationTranslationTransform = 'snake_case' | 'camelCase' | 'PascalCase' | 'kebab-case' | 'none'
+
+export interface ValidationTranslationTransformOptions {
+    prefix: string
+    transform: ValidationTranslationTransform
+}
+
+export type ValidationMessageOptions = ValidationTranslationFn | ValidationTranslationTransformOptions
+
+export interface ValidationOptions {
+    t: typeof TranslationFunction
+    message: ValidationMessageOptions
+}
+
+const DEFAULT_OPTIONS: ValidationMessageOptions = {
+    transform: 'none',
+    prefix: 'validation',
+}
+
+let t: typeof TranslationFunction | null = null
+let options: ValidationMessageOptions = clone(DEFAULT_OPTIONS)
 
 const withI18nMessage = validators.createI18nMessage({
     t: (...args) => {
-        const { t } = useI18n({ useScope: 'global' })
+        if (!t) {
+            throw new Error('No translation function provided')
+        }
         return t(...args)
     },
     messagePath(params) {
-        const { options: { i18n: { validation: options } } } = usePluginContext()
-        if (typeof options === 'function') {
-            return options(params.$validator)
+        try {
+            if (typeof options === 'function') {
+                return options(params.$validator)
+            }
+            const validator = transformValidator(params.$validator, options.transform)
+            return `${options.prefix}.${validator}`
+        } catch (err) {
+            console.log('Error while transforming validator: ', err)
+            return 'yolo'
         }
-        const validator = transformValidator(params.$validator, options.transform)
-        return `${options.prefix}.${validator}`
     },
 })
 
-function transformValidator(validator: string, transform: PluginI18nValidationTransform): string {
+function transformValidator(validator: string, transform: ValidationTranslationTransform): string {
     switch (transform) {
         case 'camelCase':
             return camelCase(validator)
@@ -61,3 +89,14 @@ export const oneOf = withI18nMessage((values: Record<string, string> | string[])
     const arrayValues = Array.isArray(values) ? values : Object.values(values)
     return !helpers.req(value) || arrayValues.includes(value)
 }), { withArguments: true })
+
+export function setGlobalValidationSettings(opt: PartialDeep<ValidationOptions>): void {
+    if (opt.t) {
+        t = opt.t
+    }
+    if (typeof opt.message === 'function') {
+        options = opt.message
+    } else {
+        options = assign({}, DEFAULT_OPTIONS, opt.message)
+    }
+}
