@@ -1,12 +1,13 @@
 import { computed, type ComputedRef, type Ref, unref } from 'vue'
 import type { BaseValidation, Validation, ValidationArgs, ValidationRule } from '@vuelidate/core'
+import type { Primitive } from 'type-fest'
 
 export type ValidationErrors<T extends object> = {
-    [key in keyof T]: T[key] extends object
-        ? T[key] extends null | undefined
+    [key in keyof T]: T[key] extends Primitive
+        ? string[]
+        : T[key] extends null | undefined
             ? ValidationErrors<NonNullable<T[key]>> | undefined
-            : ValidationErrors<T[key]>
-        : string[]
+            : ValidationErrors<NonNullable<T[key]>>
 }
 
 export const useVuelidateErrors = <T extends object>(
