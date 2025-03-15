@@ -24,6 +24,7 @@
         </VCard>
     </VDialog>
 </template>
+
 <script setup lang="ts" generic="R, T = R, C extends FormDialogComponent<T> = FormDialogComponent<T>">
     import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle, VDefaultsProvider } from 'vuetify/components'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
@@ -76,6 +77,7 @@
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             resolveValue = result as unknown as R
         }
+        resolveDialog()
     }
 
     function closeDialog(): void {
