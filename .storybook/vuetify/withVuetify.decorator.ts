@@ -1,6 +1,6 @@
 import { h } from 'vue'
 import StoryWrapper from './StoryWrapper.vue'
-import type { Decorator } from '@storybook/vue3'
+import type { Decorator } from '@storybook/vue3-vite'
 
 const DARK_THEME_VALUE = '#121212'
 

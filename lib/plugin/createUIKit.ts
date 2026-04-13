@@ -5,7 +5,7 @@ import { createDefaultPluginOptions } from '@/plugin/helper/createDefaultPluginO
 import { merge } from 'lodash'
 import { createPluginContext } from '@/plugin/helper/createPluginContext'
 
-export function createUIKit(options?: PartialDeep<PluginOptions>): FunctionPlugin<void> {
+export function createUIKit(options?: PartialDeep<PluginOptions>): FunctionPlugin<undefined[]> {
     return (app) => {
         const defaultOptions = createDefaultPluginOptions()
         const mergedOptions = merge(defaultOptions, options)

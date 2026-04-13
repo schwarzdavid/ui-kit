@@ -1,4 +1,4 @@
-import { type Decorator, type Preview, setup } from '@storybook/vue3'
+import { type Decorator, type Preview, setup } from '@storybook/vue3-vite'
 import { withVuetify } from './vuetify/withVuetify.decorator'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
@@ -36,16 +36,16 @@ const preview: Preview = {
 
     parameters: {
         backgrounds: {
-            values: [
-                {
+            options: {
+                light: {
                     name: 'Light',
                     value: '#121212',
                 },
-                {
+                dark: {
                     name: 'Dark',
                     value: '#ffffff',
                 },
-            ],
+            },
         },
         options: {
             storySort: {
