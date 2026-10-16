@@ -11,7 +11,7 @@ import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets'
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
-        dts({ rollupTypes: true, tsconfigPath: 'tsconfig.app.json' }),
+        dts({ bundleTypes: true, tsconfigPath: 'tsconfig.app.json' }),
         vue(),
         vueJsx(),
         libAssetsPlugin(),
@@ -25,8 +25,8 @@ export default defineConfig({
     build: {
         lib: {
             entry: {
-                main: resolve(__dirname, 'lib/main.ts'),
-                validators: resolve(__dirname, 'lib/validators.ts'),
+                main: resolve(import.meta.dirname, 'lib/main.ts'),
+                validators: resolve(import.meta.dirname, 'lib/validators.ts'),
             },
             formats: ['es'],
             name: 'UiKit',

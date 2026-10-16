@@ -25,7 +25,7 @@
     import useVuelidate, { type ValidationArgs } from '@vuelidate/core'
     import { maxLength, minLength, required } from '@/composables/vuelidate/validators'
     import { VTextField, VCardText } from 'vuetify/components'
-    import { VDateInput } from 'vuetify/labs/components'
+    import { VDateInput } from 'vuetify/components'
 
     defineEmits<FormDialogComponentEmits>()
 

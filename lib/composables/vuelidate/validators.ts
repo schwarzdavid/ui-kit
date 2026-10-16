@@ -1,5 +1,6 @@
 import * as validators from '@vuelidate/validators'
-import { helpers, TranslationFunction } from '@vuelidate/validators'
+import { helpers } from '@vuelidate/validators'
+import type { TranslationFunction } from '@vuelidate/validators'
 import { assign, camelCase, clone, kebabCase, snakeCase, upperFirst } from 'lodash'
 import type { PartialDeep } from 'type-fest'
 

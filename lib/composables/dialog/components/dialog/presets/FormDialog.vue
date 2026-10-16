@@ -33,7 +33,6 @@
     import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
     import useVuelidate from '@vuelidate/core'
     import { useLoading } from '@/composables/loading/useLoading'
-    import type { ComponentProps } from 'vue-component-type-helpers'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
 
     const props = defineProps<{ data: FormDialogProps<R, T, boolean, C> }>()
@@ -54,7 +53,7 @@
 
     let resolveValue: R | null = null
 
-    function createComponentProps(): ComponentProps<C> {
+    function createComponentProps(): object {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (props.data as any).props ?? {}
     }

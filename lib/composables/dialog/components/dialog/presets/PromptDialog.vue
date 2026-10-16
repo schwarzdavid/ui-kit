@@ -36,7 +36,6 @@
 
 <script lang="ts" setup generic="T, R extends boolean, C extends PromptDialogComponent<T> = PromptDialogComponent<T>">
     import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
-    import type { UnwrapRef } from 'vue'
     import { computed, ref, toValue } from 'vue'
     import { useDisplay } from 'vuetify'
     import type { PromptDialogComponent, PromptDialogProps } from '../../../presets/PromptDialogProps'
@@ -71,7 +70,7 @@
     }
 
     function closeDialog(): void {
-        resolveValue.value = (toValue(props.data.initialValue) ?? null) as UnwrapRef<T> | null
+        resolveValue.value = (toValue(props.data.initialValue) ?? null)
         dialogModel.value = false
     }
 

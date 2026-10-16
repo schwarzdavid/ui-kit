@@ -1,3 +1,3 @@
-import type { IfEmptyObject } from 'type-fest'
+import type { IsEmptyObject } from 'type-fest'
 
-export type DialogProps<T extends object> = IfEmptyObject<T, object, { props: T }>
+export type DialogProps<T extends object> = IsEmptyObject<T> extends true ? object : { props: T }

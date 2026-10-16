@@ -6,7 +6,9 @@ const config: StorybookConfig = {
     addons: ['@storybook/addon-docs'],
     framework: {
         name: '@storybook/vue3-vite',
-        options: {},
+        options: {
+            docgen: 'vue-component-meta',
+        },
     },
     core: {
         disableTelemetry: true,
@@ -15,7 +17,7 @@ const config: StorybookConfig = {
     viteFinal: async (config) => {
         return {
             ...config,
-            plugins: await withoutVitePlugins(config.plugins, ['vite:dts']),
+            plugins: await withoutVitePlugins(config.plugins, ['unplugin-dts']),
         }
     },
 }
