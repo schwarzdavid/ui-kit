@@ -1,4 +1,4 @@
-import ConfirmDialogExample from '../examples/ConfirmDialogExample.vue'
+import ConfirmDialogExample from '@/composables/dialog/docs/examples/ConfirmDialogExample.vue'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 
 const meta: Meta<typeof ConfirmDialogExample> = {

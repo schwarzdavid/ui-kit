@@ -1,0 +1,124 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Installation" />
+
+# Installation
+
+`@schwarzdavid/ui-kit` provides Vue 3 + Vuetify composables for promise-based dialogs, toasts, loading states and translated Vuelidate validators.
+
+## Install the package
+
+```sh
+npm install @schwarzdavid/ui-kit
+```
+
+The package is published as ESM only. The following peer dependencies must be installed in your application:
+
+<table>
+    <thead>
+    <tr>
+        <th>Package</th>
+        <th>Version</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>vue</td>
+        <td>^3.5.0</td>
+    </tr>
+    <tr>
+        <td>vuetify</td>
+        <td>^3.0.0 || ^4.0.0</td>
+    </tr>
+    <tr>
+        <td>vue-i18n</td>
+        <td>^9.0.0 || ^10.0.0 || ^11.0.0</td>
+    </tr>
+    <tr>
+        <td>@vuelidate/core</td>
+        <td>^2.0.0</td>
+    </tr>
+    </tbody>
+</table>
+
+The package has three entry points:
+
+<table>
+    <thead>
+    <tr>
+        <th>Entry point</th>
+        <th>Content</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>@schwarzdavid/ui-kit</td>
+        <td>The `createUIKit` plugin, the `UiKitOutlet` component, the composables and their types</td>
+    </tr>
+    <tr>
+        <td>@schwarzdavid/ui-kit/validators</td>
+        <td>Translated Vuelidate validators, `setGlobalValidationSettings` and `useVuelidateErrors`</td>
+    </tr>
+    <tr>
+        <td>@schwarzdavid/ui-kit/styles</td>
+        <td>The stylesheet of the library</td>
+    </tr>
+    </tbody>
+</table>
+
+## Register the plugin
+
+Register Vuetify and vue-i18n, then install the plugin with `app.use(createUIKit(options))` and import the styles entry once. All options are optional; see [Configuration](?path=/docs/configuration--docs) for the full list and their defaults.
+
+```ts
+import { createApp } from 'vue'
+import { createVuetify } from 'vuetify'
+import { createI18n } from 'vue-i18n'
+import { createUIKit } from '@schwarzdavid/ui-kit'
+import 'vuetify/styles'
+import '@schwarzdavid/ui-kit/styles'
+import App from './App.vue'
+
+createApp(App)
+    .use(createVuetify())
+    .use(createI18n({ legacy: false, locale: 'en', messages: { en: {} } }))
+    .use(createUIKit())
+    .mount('#app')
+```
+
+## Place the outlet
+
+The composables do not render anything themselves. Mount `UiKitOutlet` exactly once inside `VApp`, usually in your root component (`App.vue`). It renders every dialog, every toast and the global loading overlay.
+
+```vue
+<template>
+    <VApp>
+        <VMain>
+            <RouterView />
+        </VMain>
+        <UiKitOutlet />
+    </VApp>
+</template>
+
+<script lang="ts" setup>
+    import { UiKitOutlet } from '@schwarzdavid/ui-kit'
+</script>
+```
+
+## Where composables can be called
+
+`useDialog`, `useToast`, `useLoading` and `useLoadingOverlay` read the plugin state through `inject`. Call them inside `setup()` (including `<script setup>`) or inside `app.runWithContext()`. Anywhere else, or when the plugin was not installed, they throw:
+
+```text
+@schwarzdavid/ui-kit is not available in this context. Install it with app.use(createUIKit()) and call its composables inside setup() or app.runWithContext().
+```
+
+For example, to show a toast from a router guard:
+
+```ts
+router.afterEach((to, from, failure) => {
+    if (failure) {
+        app.runWithContext(() => useToast().error('navigation.failed'))
+    }
+})
+```

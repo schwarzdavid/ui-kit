@@ -1,7 +1,7 @@
 <template>
-    <DialogOutlet/>
-    <ToastOutlet/>
-    <LoadingOverlay/>
+    <DialogOutlet />
+    <ToastOutlet />
+    <LoadingOverlay />
 </template>
 
 <script setup lang="ts">

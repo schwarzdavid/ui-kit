@@ -9,7 +9,7 @@
                 <VCardTitle>
                     <MaybeTranslation :translate="data.translateTitle" :content="data.title" />
                 </VCardTitle>
-                <VBtn v-if="!data.permanent" icon="$close" variant="text" @click="closeDialog" />
+                <VBtn v-if="!data.permanent" icon="$close" variant="text" :aria-label="closeLabel" @click="closeDialog" />
             </div>
 
             <VCardText v-if="textContent">
@@ -41,31 +41,26 @@
 <script lang="ts" setup>
     import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
     import { computed, ref } from 'vue'
-    import { merge } from 'lodash'
-    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
-    import type { DialogComponentEmits } from '../../../types/DialogComponent.ts'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
     import type {
         ConfirmDialogComponentContent,
         ConfirmDialogProps,
         ConfirmDialogTextContent,
-    } from '../../../presets/ConfirmDialogProps'
-    import { usePluginContext } from '@/plugin/composables/usePluginContext'
-    import type { DialogCta } from '@/composables/dialog/types/DialogCta'
+    } from '@/composables/dialog/presets/ConfirmDialogProps'
+    import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
+    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
 
     const props = defineProps<{ data: ConfirmDialogProps }>()
     const emit = defineEmits<DialogComponentEmits<boolean>>()
 
-    const { options: { i18n: { messages: { yes, no } } } } = usePluginContext()
-
     const DEFAULT_MAX_WIDTH = 550
-    const DEFAULT_CONFIRM_CTA: DialogCta = {
-        text: yes,
-        translateText: true,
-    }
-    const DEFAULT_REJECT_CTA: DialogCta = {
-        text: no,
-        translateText: true,
-    }
+
+    const confirmCta = useDialogCta(props.data.confirmCta, 'yes')
+    const rejectCta = useDialogCta(props.data.rejectCta, 'no')
+    const translate = useMaybeTranslation()
+    const closeCta = useDialogCta(undefined, 'close')
+    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
 
     let resolveValue = false
 
@@ -82,8 +77,6 @@
             props: (props.data as ConfirmDialogComponentContent).props,
         }
         : null)
-    const confirmCta = computed<DialogCta>(() => merge({}, DEFAULT_CONFIRM_CTA, props.data.confirmCta))
-    const rejectCta = computed<DialogCta>(() => merge({}, DEFAULT_REJECT_CTA, props.data.rejectCta))
     const highlightCta = computed<ConfirmDialogProps['highlightCta']>(() => props.data.highlightCta ?? 'confirm')
     const ctaColor = computed<string>(() => props.data.level ?? 'primary')
 
@@ -106,7 +99,7 @@
 </script>
 
 <style lang="scss" scoped>
-@use "../../../../../../node_modules/vuetify/settings";
+@use "vuetify/settings";
 
 .confirm-dialog-card {
     > :deep(.v-card-text) {

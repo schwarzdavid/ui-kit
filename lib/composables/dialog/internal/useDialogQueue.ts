@@ -1,25 +1,14 @@
 import { markRaw, readonly } from 'vue'
-import { v4 } from 'uuid'
-import type { DialogQueue } from '../types/DialogQueue'
-import type { CreateDialogQueueEntry, DialogQueueEntry } from '../types/DialogQueueEntry'
+import type { DialogQueue } from '@/composables/dialog/types/DialogQueue'
+import type { CreateDialogQueueEntry, DialogQueueEntry } from '@/composables/dialog/types/DialogQueueEntry'
+import { createId } from '@/internal/createId'
 import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 export function useDialogQueue(): DialogQueue {
     const { dialogQueue } = usePluginContext()
 
-    function generateId(): string {
-        let uuid: string
-        while (true) {
-            uuid = v4()
-
-            if (!dialogQueue.value.some(entry => entry.id === uuid)) {
-                return uuid
-            }
-        }
-    }
-
     function addToQueue(entry: CreateDialogQueueEntry): DialogQueueEntry {
-        const id = generateId()
+        const id = createId()
         const resolve = (value: unknown): void => {
             removeFromQueue(id)
             entry.resolve(value)

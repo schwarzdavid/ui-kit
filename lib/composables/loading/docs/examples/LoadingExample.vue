@@ -1,9 +1,11 @@
 <template>
-    <VBtn @click="performDefaultAction" :loading="defaultLoading" color="primary">Default</VBtn>
-    <VBtn @click="performOverlayAction" color="primary">With Overlay</VBtn>
+    <VBtn :loading="defaultLoading" color="primary" @click="performDefaultAction">Default</VBtn>
+    <VBtn color="primary" @click="performOverlayAction">With Overlay</VBtn>
+    <p v-if="lastResult !== null" class="mt-4">Last result: {{ lastResult }}</p>
 </template>
 
 <script lang="ts" setup>
+    import { ref } from 'vue'
     import { useLoading } from '@/composables/loading/useLoading'
     import { VBtn } from 'vuetify/components'
 
@@ -13,18 +15,15 @@
         }, millis))
     }
 
+    const lastResult = ref<string | null>(null)
     const { loading: defaultLoading, action: defaultAction } = useLoading(timeout)
     const { action: overlayAction } = useLoading(timeout, { overlay: true })
 
-    async function performDefaultAction() {
-        const result = await defaultAction(0)
-
-        console.log(result)
+    async function performDefaultAction(): Promise<void> {
+        lastResult.value = await defaultAction(0)
     }
 
-    async function performOverlayAction() {
-        const result = await overlayAction(0)
-
-        console.log(result)
+    async function performOverlayAction(): Promise<void> {
+        lastResult.value = await overlayAction(0)
     }
 </script>

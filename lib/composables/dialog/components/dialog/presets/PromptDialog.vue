@@ -12,7 +12,7 @@
                 </VToolbarTitle>
                 <VSpacer />
                 <div ref="toolbar" class="prompt-dialog-toolbar-slot" />
-                <VBtn icon="mdi-close" @click="closeDialog" />
+                <VBtn icon="$close" :aria-label="closeLabel" @click="closeDialog" />
             </VToolbar>
             <component
                 :is="data.component"
@@ -38,11 +38,13 @@
     import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
     import { computed, ref, toValue } from 'vue'
     import { useDisplay } from 'vuetify'
-    import type { PromptDialogComponent, PromptDialogProps } from '../../../presets/PromptDialogProps'
-    import { PromptDialogSize } from '../../../presets/PromptDialogProps'
-    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
-    import type { DialogComponentEmits } from '../../../types/DialogComponent'
+    import type { PromptDialogComponent, PromptDialogProps } from '@/composables/dialog/presets/PromptDialogProps'
+    import { PromptDialogSize } from '@/composables/dialog/presets/PromptDialogProps'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
+    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
+    import { isEmptyValue } from '@/composables/dialog/internal/isEmptyValue'
 
     const props = defineProps<{ data: PromptDialogProps<T, R> }>()
     const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
@@ -54,12 +56,15 @@
 
     const saveCta = useDialogCta(props.data.saveCta, 'save')
     const abortCta = useDialogCta(props.data.abortCta, 'cancel')
+    const translate = useMaybeTranslation()
+    const closeCta = useDialogCta(undefined, 'close')
+    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
 
     const dialogModel = ref(true)
     const resolveValue = ref<T | null>(toValue(props.data.initialValue) ?? null)
     const toolbar = ref<HTMLDivElement | null>(null)
     const { mobile } = useDisplay()
-    const isSaveDisabled = computed(() => props.data.required && !resolveValue.value)
+    const isSaveDisabled = computed(() => !!props.data.required && isEmptyValue(resolveValue.value))
     const maxWidth = computed(() => MAX_WIDTH_MAP[props.data.size ?? PromptDialogSize.SMALL])
     const fullscreen = computed(() => props.data.size === PromptDialogSize.LARGE ? mobile.value : false)
     const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
@@ -79,7 +84,7 @@
     }
 
     function resolveDialog(): void {
-        if (props.data.required && !resolveValue.value) {
+        if (props.data.required && isEmptyValue(resolveValue.value)) {
             // TODO: pass error object
             emit('reject')
             return

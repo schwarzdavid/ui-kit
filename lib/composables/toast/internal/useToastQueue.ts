@@ -1,24 +1,14 @@
 import type { ToastQueue } from '@/composables/toast/types/ToastQueue'
-import { v4 } from 'uuid'
 import { markRaw, readonly } from 'vue'
-import type { CreateToastQueueEntry, ToastQueueEntry } from '@/composables/toast/types/TaostQueueEntry'
+import type { CreateToastQueueEntry, ToastQueueEntry } from '@/composables/toast/types/ToastQueueEntry'
+import { createId } from '@/internal/createId'
 import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 export function useToastQueue(): ToastQueue {
     const { toastQueue } = usePluginContext()
 
-    function generateId(): string {
-        let uuid: string
-        while (true) {
-            uuid = v4()
-            if (!toastQueue.value.some(entry => entry.id === uuid)) {
-                return uuid
-            }
-        }
-    }
-
     function addToQueue(entry: CreateToastQueueEntry): ToastQueueEntry {
-        const id = generateId()
+        const id = createId()
 
         const resolve = () => {
             removeFromQueue(id)

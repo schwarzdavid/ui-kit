@@ -27,7 +27,7 @@ export type FormDialogProps<
     P extends object = ComponentProps<C>,
 > = DialogProps<P> & {
     title: string
-    translateTitle?: string
+    translateTitle?: boolean
     saveCta?: Partial<DialogCta>
     abortCta?: Partial<DialogCta>
     component: C

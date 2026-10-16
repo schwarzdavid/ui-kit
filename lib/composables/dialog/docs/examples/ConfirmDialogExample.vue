@@ -15,9 +15,9 @@
 <script lang="ts" setup>
     import { VBtn } from 'vuetify/components'
     import { ref } from 'vue'
-    import { useDialog } from '../../useDialog'
-    import { ConfirmDialogLevel } from '../../presets/ConfirmDialogProps'
-    import ConfirmDialogContent from './ConfirmDialogContent.vue'
+    import { useDialog } from '@/composables/dialog/useDialog'
+    import { ConfirmDialogLevel } from '@/composables/dialog/presets/ConfirmDialogProps'
+    import ConfirmDialogContent from '@/composables/dialog/docs/examples/ConfirmDialogContent.vue'
 
     const dialog = useDialog()
     const lastChoice = ref<boolean | null>(null)
@@ -59,11 +59,11 @@
             component: ConfirmDialogContent,
             props: {},
             confirmCta: {
-                text: 'Drück mich',
+                text: 'Confirm',
                 translateText: false,
             },
             rejectCta: {
-                text: 'Drück mich',
+                text: 'Abort',
                 translateText: false,
             },
         })

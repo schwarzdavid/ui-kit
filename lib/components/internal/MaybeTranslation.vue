@@ -1,17 +1,16 @@
-<template>
-    <template v-if="translate">{{ t(content) }}</template>
-    <template v-else>{{ content }}</template>
-</template>
+<template>{{ text }}</template>
 
 <script lang="ts" setup>
-    import { useI18n } from 'vue-i18n'
+    import { computed } from 'vue'
+    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
 
-    withDefaults(defineProps<{
+    const props = withDefaults(defineProps<{
         content: string
         translate?: boolean
     }>(), {
         translate: true,
     })
 
-    const { t } = useI18n({ useScope: 'global' })
+    const maybeTranslate = useMaybeTranslation()
+    const text = computed(() => maybeTranslate(props.content, props.translate))
 </script>

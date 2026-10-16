@@ -1,9 +1,10 @@
 <template>
     <VCardText>
-        <form @submit.prevent>
-            <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error"/>
-            <VTextField v-model.number="v.age.$model" label="Name" type="number"  :error="v.age.$error"/>
-            <VDateInput v-model="v.date.$model" label="Date"  :error="v.date.$error"/>
+        <form @submit.prevent="emit('save')">
+            <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error" />
+            <VTextField v-model.number="v.age.$model" label="Age" type="number" :error="v.age.$error" />
+            <VDateInput v-model="v.date.$model" label="Date" :error="v.date.$error" />
+            <button type="submit" class="d-none" />
         </form>
     </VCardText>
 </template>
@@ -24,15 +25,13 @@
     import { ref } from 'vue'
     import useVuelidate, { type ValidationArgs } from '@vuelidate/core'
     import { maxLength, minLength, required } from '@/composables/vuelidate/validators'
-    import { VTextField, VCardText } from 'vuetify/components'
-    import { VDateInput } from 'vuetify/components'
+    import { VCardText, VDateInput, VTextField } from 'vuetify/components'
 
-    defineEmits<FormDialogComponentEmits>()
+    const emit = defineEmits<FormDialogComponentEmits>()
 
     defineExpose<FormDialogComponentExposed<string>>({
         finish(): Promise<string> {
-            console.log('hi')
-            return Promise.resolve('Hi')
+            return Promise.resolve(state.value.name)
         },
     })
 

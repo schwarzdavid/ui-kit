@@ -1,5 +1,5 @@
 import type { DeepReadonly, Ref } from 'vue'
-import type { CreateDialogQueueEntry, DialogQueueEntry } from './DialogQueueEntry'
+import type { CreateDialogQueueEntry, DialogQueueEntry } from '@/composables/dialog/types/DialogQueueEntry'
 
 export interface DialogQueue {
     queue: DeepReadonly<Ref<DialogQueueEntry[]>>

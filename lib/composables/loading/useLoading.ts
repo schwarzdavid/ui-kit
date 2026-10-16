@@ -3,46 +3,41 @@ import { useLoadingOverlay } from '@/composables/loading-overlay/useLoadingOverl
 import type { PluginLoadingOptions } from '@/plugin/types/PluginOptions'
 import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type LoadingAction = (...args: any) => any | Promise<any>
+export type LoadingAction = (...args: never[]) => unknown
 
 export interface LoadingComposable<A extends LoadingAction> {
     loading: Readonly<Ref<boolean>>
     action(...args: Parameters<A>): Promise<Awaited<ReturnType<A>>>
 }
 
-function timeout(millis?: number | false): Promise<void> {
+function minimumDuration(millis: number | false): Promise<void> {
     if (!millis) {
         return Promise.resolve()
     }
     return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve()
-        }, millis)
+        setTimeout(resolve, millis)
     })
 }
 
-// eslint-disable-next-line
 export function useLoading<A extends LoadingAction>(actionCallback: A, options: Partial<PluginLoadingOptions> = {}): LoadingComposable<A> {
-    const { options: { loading: { delay, overlay } } } = usePluginContext()
+    const { options: { loading: defaultOptions } } = usePluginContext()
+    const delay = options.delay ?? defaultOptions.delay
+    const overlay = options.overlay ?? defaultOptions.overlay
     const loading = ref(false)
     const isOverlayActive = useLoadingOverlay()
+    const callback = actionCallback as (...args: Parameters<A>) => ReturnType<A>
 
     async function action(...args: Parameters<A>): Promise<Awaited<ReturnType<A>>> {
         loading.value = true
-
         if (overlay) {
             isOverlayActive.value = true
         }
-
         try {
             const [result] = await Promise.all([
-                actionCallback(...args),
-                timeout(delay),
+                callback(...args),
+                minimumDuration(delay),
             ])
             return result
-        } catch (err) {
-            throw err
         } finally {
             loading.value = false
             if (overlay) {

@@ -5,8 +5,7 @@
                 <VCardTitle>
                     <MaybeTranslation :translate="data.translateTitle" :content="data.title" />
                 </VCardTitle>
-                <!-- eslint-disable-next-line vue/v-on-handler-style -->
-                <VBtn icon="$close" variant="text" @click="closeDialog(null)" />
+                <VBtn icon="$close" variant="text" :aria-label="closeLabel" @click="closeWithDefaultValue" />
             </div>
 
             <VCardText v-if="textContent">
@@ -26,7 +25,7 @@
                     @click="() => onCtaClick(cta)">
                     <MaybeTranslation :translate="cta.translateText" :content="cta.text" />
                 </VBtn>
-                <VBtn v-if="defaultCta" color="primary" variant="elevated" @click="closeDialog">
+                <VBtn v-if="defaultCta" color="primary" variant="elevated" @click="closeWithDefaultValue">
                     <MaybeTranslation :translate="defaultCta.translateText" :content="defaultCta.text" />
                 </VBtn>
             </VCardActions>
@@ -37,28 +36,21 @@
 <script lang="ts" setup generic="T">
     import { computed, ref } from 'vue'
     import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
-    import { merge } from 'lodash'
-    import MaybeTranslation from '../../../../../components/internal/MaybeTranslation.vue'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import type {
         InfoDialogComponentContent,
         InfoDialogProps,
         InfoDialogTextContent,
-    } from '../../../presets/InfoDialogProps'
-    import type { DialogComponentEmits } from '../../../types/DialogComponent'
-    import { usePluginContext } from '@/plugin/composables/usePluginContext'
-    import type { DialogActionCta, DialogValueCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
+    } from '@/composables/dialog/presets/InfoDialogProps'
+    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
+    import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
+    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
+    import type { DialogActionCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 
     const props = defineProps<{ data: InfoDialogProps<T> }>()
     const emit = defineEmits<DialogComponentEmits<T | null>>()
 
-    const { options: { i18n: { messages: { close } } } } = usePluginContext()
-
     const DEFAULT_MAX_WIDTH = 650
-    const DEFAULT_CTA: DialogValueCta<null> = {
-        text: close,
-        translateText: true,
-        value: null,
-    }
 
     let resolveValue: T | null = null
 
@@ -76,9 +68,10 @@
         }
         : null)
 
-    const defaultCta = computed<DialogValueCta<null> | null>(() => props.data.defaultCta === false
-        ? null
-        : merge({}, DEFAULT_CTA, props.data.defaultCta))
+    const defaultCta = props.data.defaultCta === false ? null : useDialogCta(props.data.defaultCta, 'close')
+    const translate = useMaybeTranslation()
+    const closeCta = useDialogCta(undefined, 'close')
+    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
 
     function onCtaClick(cta: InteractiveDialogCta<T | null>): void {
         if (isActionCta(cta)) {
@@ -97,13 +90,17 @@
         dialogModel.value = false
     }
 
+    function closeWithDefaultValue(): void {
+        closeDialog()
+    }
+
     function resolveDialog(): void {
         emit('resolve', resolveValue)
     }
 </script>
 
 <style lang="scss" scoped>
-@use "../../../../../../node_modules/vuetify/settings";
+@use "vuetify/settings";
 
 .info-dialog-card {
     > :deep(.v-card-text) {

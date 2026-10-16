@@ -1,16 +1,12 @@
-import { getCurrentInstance, inject } from 'vue'
+import { hasInjectionContext, inject } from 'vue'
 import { Errors } from '@/plugin/constants/errors'
-import type { PluginContext } from '@/plugin/helper/createPluginContext'
+import { UI_KIT_INJECTION_KEY } from '@/plugin/constants/injectionKey'
+import type { PluginContext } from '@/plugin/types/PluginContext'
 
 export function usePluginContext(): PluginContext {
-    const instance = getCurrentInstance()
-    if (!instance?.appContext.app.__SCHWARZDAVID_UIKIT_SYMBOL__) {
-        throw new Error(Errors.NOT_INSTALLED)
-    }
-    const injectionKey = instance.appContext.app.__SCHWARZDAVID_UIKIT_SYMBOL__
-    const context = inject<PluginContext>(injectionKey)
+    const context = hasInjectionContext() ? inject(UI_KIT_INJECTION_KEY, null) : null
     if (!context) {
-        throw new Error(Errors.UNEXPECTED_ERROR)
+        throw new Error(Errors.NOT_INSTALLED)
     }
     return context
 }

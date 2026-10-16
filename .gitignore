@@ -12,11 +12,10 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+storybook-static
 coverage
 *.local
 
-/cypress/videos/
-/cypress/screenshots/
 
 # Editor directories and files
 .vscode/*

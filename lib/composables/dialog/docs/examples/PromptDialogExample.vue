@@ -12,10 +12,10 @@
 
 <script lang="ts" setup>
     import { ref } from 'vue'
-    import { useDialog } from '../../useDialog'
-    import { PromptDialogSize } from '../../presets/PromptDialogProps'
-    import PromptDialogContent from './PromptDialogContent.vue'
-    import PromptDialogLargeContent from './PromptDialogLargeContent.vue'
+    import { useDialog } from '@/composables/dialog/useDialog'
+    import { PromptDialogSize } from '@/composables/dialog/presets/PromptDialogProps'
+    import PromptDialogContent from '@/composables/dialog/docs/examples/PromptDialogContent.vue'
+    import PromptDialogLargeContent from '@/composables/dialog/docs/examples/PromptDialogLargeContent.vue'
     import { VBtn } from 'vuetify/components'
 
     const dialog = useDialog()
@@ -27,7 +27,7 @@
             props: {
                 label: 'Example translated input',
             },
-            initialValue: {},
+            initialValue: '',
             title: 'Testprompt',
             translateTitle: false,
         })

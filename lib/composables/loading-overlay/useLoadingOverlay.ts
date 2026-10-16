@@ -1,7 +1,6 @@
-import { ref, type Ref } from 'vue'
-
-const isOverlayActive = ref(false)
+import type { Ref } from 'vue'
+import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
 export function useLoadingOverlay(): Ref<boolean> {
-    return isOverlayActive
+    return usePluginContext().loadingOverlay
 }

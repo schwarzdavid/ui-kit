@@ -1,6 +1,6 @@
 <template>
     <VOverlay v-model="isOverlayActive" persistent class="d-flex align-center justify-center">
-        <VProgressCircular indeterminate color="primary" size="100"/>
+        <VProgressCircular indeterminate color="primary" size="100" />
     </VOverlay>
 </template>
 

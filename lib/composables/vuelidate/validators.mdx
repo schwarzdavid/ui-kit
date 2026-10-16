@@ -1,0 +1,166 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="validators" />
+
+# validators
+
+The `@schwarzdavid/ui-kit/validators` entry re-exports the rules of `@vuelidate/validators` wrapped with `createI18nMessage`, so that every error message is a translation of a key derived from the rule name. It also exports `useVuelidateErrors` to turn a validation object into translated error messages.
+
+## Setup
+
+Call `setGlobalValidationSettings` once at startup, before any validation message is rendered. Without a `t` function, rendering a message throws `No translation function provided`.
+
+`setGlobalValidationSettings(opt: ValidationSettings): void`
+
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>t</td>
+        <td>(path: string, params) =&gt; string</td>
+        <td>The translation function. It receives the message path and the parameters of the rule together with `model` and `property`.</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>message</td>
+        <td>ValidationTranslationFn | Partial&lt;ValidationTranslationTransformOptions&gt;</td>
+        <td>Either a function `(validatorName: string) => string` that returns the full message path, or an object with `prefix` and `transform` (see below).</td>
+        <td>`prefix: 'validation'`, `transform: 'none'`</td>
+    </tr>
+    </tbody>
+</table>
+
+Both properties are optional. A call without `message` resets the message settings to the defaults, so pass `t` and `message` together in a single call.
+
+```ts
+import { setGlobalValidationSettings } from '@schwarzdavid/ui-kit/validators'
+
+setGlobalValidationSettings({
+    t: (path, params) => i18n.global.t(path, params),
+    message: { prefix: 'errors', transform: 'snake_case' },
+})
+```
+
+## Message paths
+
+With the object form of `message`, the path of a message is `<prefix>.<transformed rule name>`. The rule name is the key of the rule in your rules object, for example `minLength` in `{ minLength: minLength(3) }`. The following table shows the resulting key for `minLength` with the default prefix `validation`:
+
+<table>
+    <thead>
+    <tr>
+        <th>transform</th>
+        <th>Resulting key</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>`'none'` (default)</td>
+        <td>`validation.minLength`</td>
+    </tr>
+    <tr>
+        <td>`'camelCase'`</td>
+        <td>`validation.minLength`</td>
+    </tr>
+    <tr>
+        <td>`'PascalCase'`</td>
+        <td>`validation.MinLength`</td>
+    </tr>
+    <tr>
+        <td>`'snake_case'`</td>
+        <td>`validation.min_length`</td>
+    </tr>
+    <tr>
+        <td>`'kebab-case'`</td>
+        <td>`validation.min-length`</td>
+    </tr>
+    </tbody>
+</table>
+
+With the function form, the returned string is used as the path unchanged:
+
+```ts
+setGlobalValidationSettings({
+    t: (path, params) => i18n.global.t(path, params),
+    message: name => `forms.errors.${name}`,
+})
+```
+
+The parameters of a rule are passed to `t`, so a message can interpolate them, for example `"minLength": "Enter at least {min} characters"`.
+
+## Exported validators
+
+<table>
+    <thead>
+    <tr>
+        <th>Validator</th>
+        <th>Usage</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td>required</td><td>`required`</td></tr>
+    <tr><td>requiredIf</td><td>`requiredIf(condition)`</td></tr>
+    <tr><td>requiredUnless</td><td>`requiredUnless(condition)`</td></tr>
+    <tr><td>minLength</td><td>`minLength(length)`</td></tr>
+    <tr><td>maxLength</td><td>`maxLength(length)`</td></tr>
+    <tr><td>minValue</td><td>`minValue(min)`</td></tr>
+    <tr><td>maxValue</td><td>`maxValue(max)`</td></tr>
+    <tr><td>between</td><td>`between(min, max)`</td></tr>
+    <tr><td>alpha</td><td>`alpha`</td></tr>
+    <tr><td>alphaNum</td><td>`alphaNum`</td></tr>
+    <tr><td>numeric</td><td>`numeric`</td></tr>
+    <tr><td>integer</td><td>`integer`</td></tr>
+    <tr><td>decimal</td><td>`decimal`</td></tr>
+    <tr><td>email</td><td>`email`</td></tr>
+    <tr><td>ipAddress</td><td>`ipAddress`</td></tr>
+    <tr><td>macAddress</td><td>`macAddress(separator)`, for example `macAddress(':')`</td></tr>
+    <tr><td>sameAs</td><td>`sameAs(equalTo, otherName?)`</td></tr>
+    <tr><td>url</td><td>`url`</td></tr>
+    <tr><td>oneOf</td><td>`oneOf(values)`, where `values` is a `string[]` or a `Record<string, string>` whose values are allowed. Empty values pass; combine it with `required` if needed.</td></tr>
+    </tbody>
+</table>
+
+## useVuelidateErrors
+
+`useVuelidateErrors<T>(validation: Ref<Validation<ValidationArgs<T>, T>>): ComputedRef<ValidationErrors<T>>`
+
+Returns a computed object that mirrors the shape of your state. Every validated primitive field holds a `string[]` of its translated error messages and every nested object holds its own errors object. Bind the arrays directly to the `error-messages` prop of Vuetify inputs.
+
+```vue
+<template>
+    <VTextField v-model="v.name.$model" label="Name" :error-messages="errors.name" />
+    <VTextField v-model="v.address.city.$model" label="City" :error-messages="errors.address.city" />
+</template>
+
+<script lang="ts" setup>
+    import { ref } from 'vue'
+    import useVuelidate from '@vuelidate/core'
+    import { minLength, required, useVuelidateErrors } from '@schwarzdavid/ui-kit/validators'
+
+    const state = ref({
+        name: '',
+        address: {
+            city: '',
+        },
+    })
+
+    const v = useVuelidate({
+        name: { required, minLength: minLength(3) },
+        address: {
+            city: { required },
+        },
+    }, state)
+
+    const errors = useVuelidateErrors(v)
+</script>
+```
+
+### Known limitation
+
+`useVuelidateErrors` has not been made to work with `$each` collection validators (rules built with Vuelidate's `helpers.forEach`). Errors of the individual collection items are not mapped into the result; read them from the validation object directly.

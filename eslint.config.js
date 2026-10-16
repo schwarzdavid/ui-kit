@@ -1,4 +1,4 @@
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import js from '@eslint/js'
 import storybook from 'eslint-plugin-storybook'
 import vue from 'eslint-plugin-vue'
 import stylistic from '@stylistic/eslint-plugin'
@@ -11,9 +11,14 @@ export default [
         files: ['**/*.{ts,tsx,vue}'],
     },
     {
-        ignores: ['dist/**', 'dist-ssr/**', 'coverage/**'],
+        ignores: ['dist/**', 'dist-ssr/**', 'coverage/**', 'storybook-static/**'],
     },
-    ...vue.configs['flat/essential'],
+    js.configs.recommended,
+    {
+        ...ts.configs.eslintRecommended,
+        files: ['**/*.ts', '**/*.tsx', '**/*.vue'],
+    },
+    ...vue.configs['flat/recommended'],
     ...ts.configs.strictTypeChecked,
     ...ts.configs.stylisticTypeChecked,
     stylistic.configs.customize({
@@ -23,7 +28,7 @@ export default [
     }),
     {
         ...vitest.configs.recommended,
-        files: ['lib/**/__tests__/*'],
+        files: ['lib/**/__tests__/**/*.test.ts'],
     },
     {
         languageOptions: {
@@ -47,6 +52,16 @@ export default [
             'vue/script-indent': ['error', 4, {
                 baseIndent: 1,
             }],
+            'vue/html-indent': ['error', 4],
+            'vue/max-attributes-per-line': ['error', {
+                singleline: 5,
+                multiline: 1,
+            }],
+            'vue/html-closing-bracket-newline': ['error', {
+                singleline: 'never',
+                multiline: 'never',
+            }],
+            'vue/singleline-html-element-content-newline': 'off',
             '@stylistic/indent': 'off',
         },
     },

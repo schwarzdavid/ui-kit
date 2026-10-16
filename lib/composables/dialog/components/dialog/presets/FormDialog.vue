@@ -1,23 +1,23 @@
 <template>
-    <VDialog v-model="dialogModel" @after-leave="resolveDialog" max-width="1200" scrollable>
+    <VDialog v-model="dialogModel" max-width="1200" scrollable @after-leave="resolveDialog">
         <VCard>
             <VToolbar color="primary">
                 <VToolbarTitle>
-                    <MaybeTranslation :content="data.title" :translate="!!data.translateTitle"/>
+                    <MaybeTranslation :content="data.title" :translate="data.translateTitle" />
                 </VToolbarTitle>
-                <VSpacer/>
-                <VBtn icon="mdi-close" @click="closeDialog"/>
+                <VSpacer />
+                <VBtn icon="$close" :aria-label="closeLabel" @click="closeDialog" />
             </VToolbar>
             <VDefaultsProvider :defaults="componentDefaults">
-                <component :is="data.component" ref="formComponent" @save="finish" v-bind="createComponentProps()"/>
+                <component :is="data.component" ref="formComponent" v-bind="createComponentProps()" @save="finish" />
             </VDefaultsProvider>
-            <VDivider/>
+            <VDivider />
             <VCardActions>
-                <VSpacer/>
-                <VBtn @click="closeDialog" color="primary">
-                    <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText"/>
+                <VSpacer />
+                <VBtn color="primary" @click="closeDialog">
+                    <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText" />
                 </VBtn>
-                <VBtn @click="finish" variant="elevated" color="primary">
+                <VBtn variant="elevated" color="primary" @click="finish">
                     <MaybeTranslation :translate="saveCta.translateText" :content="saveCta.text" />
                 </VBtn>
             </VCardActions>
@@ -34,12 +34,16 @@
     import useVuelidate from '@vuelidate/core'
     import { useLoading } from '@/composables/loading/useLoading'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
+    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
 
     const props = defineProps<{ data: FormDialogProps<R, T, boolean, C> }>()
     const emit = defineEmits<DialogComponentEmits<R | null>>()
 
     const saveCta = useDialogCta(props.data.saveCta, 'save')
     const abortCta = useDialogCta(props.data.abortCta, 'cancel')
+    const translate = useMaybeTranslation()
+    const closeCta = useDialogCta(undefined, 'close')
+    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
 
     const formComponent = useTemplateRef<InstanceType<FormDialogComponent<T>>>('formComponent')
     const dialogModel = ref(true)

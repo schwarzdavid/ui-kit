@@ -1,13 +1,13 @@
 import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
-import type { InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
+import type { DialogCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 import type { DialogProps } from '@/composables/dialog/types/DialogProps'
 
 interface InfoDialogBaseProps<T> {
     title: string
     translateTitle?: boolean
     additionalCta?: InteractiveDialogCta<T>[]
-    defaultCta?: Partial<InteractiveDialogCta<T>> | false
+    defaultCta?: Partial<DialogCta> | false
     width?: number | string
 }
 

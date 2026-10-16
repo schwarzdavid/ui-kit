@@ -1,10 +1,84 @@
-import {Meta, Story} from "@storybook/addon-docs/blocks";
-import * as LoadingStories from "./docs/stories/Loading.stories.ts";
+import { Meta, Story } from '@storybook/addon-docs/blocks'
+import * as LoadingStories from './docs/stories/Loading.stories.ts'
 
-<Meta title="composables/useLoading"/>
+<Meta title="composables/useLoading" />
 
 # useLoading
 
+Wraps an asynchronous callback and tracks whether it is running. The `loading` ref drives spinners and disabled states, and the wrapped `action` can optionally show the global loading overlay rendered by `UiKitOutlet`.
+
 ### Demo
 
-<Story of={LoadingStories.Default}/>
+<Story of={LoadingStories.Default} />
+
+### Usage
+
+`useLoading<A>(callback: A, options?: Partial<PluginLoadingOptions>): LoadingComposable<A>`
+
+Returns `{ loading, action }`:
+
+- `loading` is a readonly `Ref<boolean>` that is `true` while `action` runs.
+- `action(...args)` forwards its arguments to `callback` and returns a Promise of the callback's return value. Errors thrown by the callback are rethrown, and `loading` is reset in any case.
+
+When the callback succeeds, `loading` stays `true` for at least `delay` milliseconds, even if the callback finishes earlier, so that the spinner does not flicker. If the callback rejects, `loading` is reset immediately. When `overlay` is `true`, the global loading overlay is shown while the action runs.
+
+**Options**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>delay</td>
+        <td>number | false</td>
+        <td>Minimum duration in milliseconds for which `loading` stays true. `false` disables the minimum duration.</td>
+        <td>The plugin option `loading.delay` (`2000`)</td>
+    </tr>
+    <tr>
+        <td>overlay</td>
+        <td>boolean</td>
+        <td>Whether the global loading overlay is shown while the action runs</td>
+        <td>The plugin option `loading.overlay` (`false`)</td>
+    </tr>
+    </tbody>
+</table>
+
+Options passed to `useLoading` override the plugin options for this call.
+
+### Example implementation
+
+```vue
+<template>
+    <VBtn :loading="defaultLoading" color="primary" @click="performDefaultAction">Default</VBtn>
+    <VBtn color="primary" @click="performOverlayAction">With Overlay</VBtn>
+    <p v-if="lastResult !== null" class="mt-4">Last result: {{ lastResult }}</p>
+</template>
+
+<script lang="ts" setup>
+    import { ref } from 'vue'
+    import { useLoading } from '@schwarzdavid/ui-kit'
+
+    function timeout(millis: number): Promise<string> {
+        return new Promise(resolve => setTimeout(() => {
+            resolve(Math.random().toFixed(2))
+        }, millis))
+    }
+
+    const lastResult = ref<string | null>(null)
+    const { loading: defaultLoading, action: defaultAction } = useLoading(timeout)
+    const { action: overlayAction } = useLoading(timeout, { overlay: true })
+
+    async function performDefaultAction(): Promise<void> {
+        lastResult.value = await defaultAction(0)
+    }
+
+    async function performOverlayAction(): Promise<void> {
+        lastResult.value = await overlayAction(0)
+    }
+</script>
+```

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'vue-component-type-helpers'
-import type { DialogComponent } from './DialogComponent'
+import type { DialogComponent } from '@/composables/dialog/types/DialogComponent'
 
 export interface DialogQueueEntry<
     Value = unknown,

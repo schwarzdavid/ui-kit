@@ -5,6 +5,7 @@
         <VBtn color="primary" @click="openAdditionalCtaDialog">Additional actions</VBtn>
         <VBtn color="primary" @click="openChoiceCtaDialog">Simple Choice</VBtn>
     </div>
+    <p v-if="actionCount" class="mt-4">Action triggered {{ actionCount }} times</p>
     <div v-if="pill" class="mt-4">
         <p>You chose: {{ pill }}</p>
         <!-- eslint-disable-next-line vue/v-on-handler-style -->
@@ -14,12 +15,13 @@
 
 <script lang="ts" setup>
     import { ref } from 'vue'
-    import { useDialog } from '../../useDialog'
-    import InfoDialogContent from './InfoDialogContent.vue'
+    import { useDialog } from '@/composables/dialog/useDialog'
+    import InfoDialogContent from '@/composables/dialog/docs/examples/InfoDialogContent.vue'
     import { VBtn } from 'vuetify/components'
 
     const dialog = useDialog()
     const pill = ref<string | null>(null)
+    const actionCount = ref(0)
 
     function openTextDialog(): void {
         void dialog.info({
@@ -49,10 +51,9 @@
             translateContent: false,
             additionalCta: [
                 {
-                    text: 'Show alert',
+                    text: 'Trigger action',
                     translateText: false,
-
-                    action: () => { alert('Test') },
+                    action: () => { actionCount.value++ },
                 },
             ],
         })

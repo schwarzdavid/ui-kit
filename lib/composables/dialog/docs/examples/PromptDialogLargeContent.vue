@@ -11,13 +11,11 @@
         </VCol>
         <VCol v-if="!mobile" cols="4">
             <p class="pa-4">
-                Ich könnte eine Sidebar sein, auf der Filter und andere Einstellungen zu sehen sein
-                könnten.
+                This could be a sidebar holding filters and other settings.
             </p>
             <p class="pa-4">
-                Außerdem können Elemente direkt in der Toolbar mittels der &lt;teleport&gt; Component
-                platziert werden, um bspw. eine Sidebar auf kleinen Geräten anzuzeigen. Mach den Bildschirm klein für
-                eine Demo.
+                Elements can also be placed directly in the toolbar through the &lt;teleport&gt; component, for example
+                to show a sidebar on small screens. Shrink the window to see it.
             </p>
             <div class="d-flex">
                 <VSkeletonLoader type="button" class="flex-grow-1" />

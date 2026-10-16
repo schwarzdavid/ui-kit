@@ -1,26 +1,29 @@
 <template>
-    <VAlert theme="dark" class="toast-entry" closable @click:close="closeToast" density="compact">
-        <span v-if="entry.translateMessage">{{t(entry.message)}}</span>
-        <span v-else>{{entry.message}}</span>
-        <template #prepend v-if="icon">
-            <VIcon :icon="icon" :color="color"/>
+    <VAlert
+        theme="dark"
+        class="toast-entry"
+        closable
+        density="compact"
+        @click:close="closeToast">
+        <MaybeTranslation :content="entry.message" :translate="entry.translateMessage" />
+        <template #prepend>
+            <VIcon :icon="icon" :color="color" />
         </template>
     </VAlert>
 </template>
 
 <script lang="ts" setup>
-    import type { ToastQueueEntry } from '@/composables/toast/types/TaostQueueEntry'
-    import { computed, onMounted, ref } from 'vue'
-    import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
+    import { computed, onBeforeUnmount, onMounted } from 'vue'
     import { VAlert, VIcon } from 'vuetify/components'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import type { ToastQueueEntry } from '@/composables/toast/types/ToastQueueEntry'
     import { ToastType } from '@/composables/toast/types/ToastType'
-    import { useI18n } from 'vue-i18n'
 
     const TYPE_ICON_MAP: Record<ToastType, string> = {
-        [ToastType.ERROR]: 'mdi-alert-circle-outline',
-        [ToastType.SUCCESS]: 'mdi-check-circle-outline',
-        [ToastType.INFO]: 'mdi-information-outline',
-        [ToastType.WARNING]: 'mdi-alert-circle-outline',
+        [ToastType.ERROR]: '$error',
+        [ToastType.SUCCESS]: '$success',
+        [ToastType.INFO]: '$info',
+        [ToastType.WARNING]: '$warning',
     }
 
     const TYPE_COLOR_MAP: Record<ToastType, string> = {
@@ -34,22 +37,28 @@
         entry: ToastQueueEntry
     }>()
 
-    const toastQueue = useToastQueue()
-    const timeoutId = ref<number>(-1)
     const icon = computed(() => TYPE_ICON_MAP[props.entry.type])
     const color = computed(() => TYPE_COLOR_MAP[props.entry.type])
-    const { t } = useI18n({ useScope: 'global' })
 
-    function closeToast() {
-        window.clearTimeout(timeoutId.value)
-        toastQueue.removeFromQueue(props.entry.id)
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+    function clearTimer(): void {
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId)
+            timeoutId = null
+        }
+    }
+
+    function closeToast(): void {
+        clearTimer()
+        props.entry.resolve()
     }
 
     onMounted(() => {
-        timeoutId.value = window.setTimeout(() => {
-            closeToast()
-        }, props.entry.timeout)
+        timeoutId = setTimeout(closeToast, props.entry.timeout)
     })
+
+    onBeforeUnmount(clearTimer)
 </script>
 
 <style lang="scss" scoped>

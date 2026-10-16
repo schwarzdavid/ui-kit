@@ -9,7 +9,7 @@
     "lib/**/*.vue"
   ],
   "exclude": [
-    "lib/**/__tests__/*"
+    "lib/**/__tests__/**"
   ],
   "compilerOptions": {
     "composite": true,

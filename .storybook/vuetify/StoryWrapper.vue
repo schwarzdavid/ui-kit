@@ -1,9 +1,9 @@
 <template>
     <VApp :theme="theme">
         <VMain>
-            <slot name="story"/>
+            <slot name="story" />
         </VMain>
-        <UiKitOutlet/>
+        <UiKitOutlet />
     </VApp>
 </template>
 

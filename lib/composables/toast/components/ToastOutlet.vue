@@ -1,7 +1,14 @@
 <template>
-        <TransitionGroup name="fade" tag="div" class="toast-outlet" :class="outletClasses" @before-leave="onBeforeLeave">
-            <ToastEntry v-for="entry in queue" :key="entry.id" :entry="entry"/>
-        </TransitionGroup>
+    <TransitionGroup
+        name="fade"
+        tag="div"
+        class="toast-outlet"
+        :class="outletClasses"
+        role="status"
+        aria-live="polite"
+        @before-leave="onBeforeLeave">
+        <ToastEntry v-for="entry in queue" :key="entry.id" :entry="entry" />
+    </TransitionGroup>
 </template>
 
 <script lang="ts" setup>

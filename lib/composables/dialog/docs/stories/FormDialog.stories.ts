@@ -1,4 +1,4 @@
-import FormDialogExample from '../examples/FormDialogExample.vue'
+import FormDialogExample from '@/composables/dialog/docs/examples/FormDialogExample.vue'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 
 const meta: Meta<typeof FormDialogExample> = {
