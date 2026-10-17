@@ -4,13 +4,14 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 # Configuration
 
-`createUIKit(options?: PartialDeep<PluginOptions>)` deep-merges the passed options over the defaults, so you only pass the values you want to change.
+`createUIKit(options?: CreateUIKitOptions)` deep-merges the passed options over the defaults, so you only pass the values you want to change. The `components` option is the exception: each component is replaced as a whole, never merged.
 
 ```ts
 app.use(createUIKit({
     loading: { delay: 500 },
-    toast: { timeout: 6000 },
+    toast: { timeout: 6000, errorTimeout: 10000 },
     i18n: { messages: { close: 'buttons.close' } },
+    components: { dialog: { confirm: MyConfirmDialog } },
 }))
 ```
 
@@ -29,7 +30,7 @@ app.use(createUIKit({
     <tr>
         <td>loading.delay</td>
         <td>number | false</td>
-        <td>Minimum duration in milliseconds for which `useLoading` keeps `loading` true, so that the spinner does not flicker on fast actions. `false` disables the minimum duration.</td>
+        <td>Minimum duration in milliseconds for which `useLoading` keeps `loading` true, so that the spinner does not flicker on fast actions. `false` disables the minimum duration. The form dialog uses `useLoading` for its submit.</td>
         <td>`2000`</td>
     </tr>
     <tr>
@@ -41,23 +42,59 @@ app.use(createUIKit({
     <tr>
         <td>toast.timeout</td>
         <td>number</td>
-        <td>Time in milliseconds after which a toast disappears.</td>
+        <td>Time in milliseconds after which an info, warning or success toast disappears.</td>
         <td>`4000`</td>
+    </tr>
+    <tr>
+        <td>toast.errorTimeout</td>
+        <td>number | false</td>
+        <td>Time in milliseconds after which an error toast disappears. `false` keeps error toasts until the user dismisses them.</td>
+        <td>`false`</td>
     </tr>
     <tr>
         <td>i18n.messages</td>
         <td>Record&lt;PluginI18nMessageKey, string&gt;</td>
-        <td>Translation keys of the default dialog button labels. See below.</td>
+        <td>Translation keys of the default dialog and toast labels. See below.</td>
         <td>See below</td>
+    </tr>
+    <tr>
+        <td>components.dialog.info</td>
+        <td>Component</td>
+        <td>The component that renders `dialog.info()`.</td>
+        <td>The built-in info preset</td>
+    </tr>
+    <tr>
+        <td>components.dialog.confirm</td>
+        <td>Component</td>
+        <td>The component that renders `dialog.confirm()`.</td>
+        <td>The built-in confirm preset</td>
+    </tr>
+    <tr>
+        <td>components.dialog.prompt</td>
+        <td>Component</td>
+        <td>The component that renders `dialog.prompt()`.</td>
+        <td>The built-in prompt preset</td>
+    </tr>
+    <tr>
+        <td>components.dialog.form</td>
+        <td>Component</td>
+        <td>The component that renders `dialog.form()`.</td>
+        <td>The built-in form preset</td>
+    </tr>
+    <tr>
+        <td>components.toast</td>
+        <td>Component</td>
+        <td>The component that renders one toast.</td>
+        <td>The built-in snackbar</td>
     </tr>
     </tbody>
 </table>
 
-`useLoading` and `useToast` accept per-call options that override these defaults.
+`useLoading` and `useToast` accept per-call options that override these defaults. Custom components read their data through `useDialogEntry()` and `useToastEntry()`; see [Custom presets](?path=/docs/custom-presets--docs).
 
 ## i18n message keys
 
-The dialogs label their default buttons with the following translation keys. The keys are looked up in the global vue-i18n instance; a key that does not exist in any locale is rendered verbatim, so you can also pass plain text.
+The dialogs and toasts label their default buttons with the following translation keys. The keys are looked up in the global vue-i18n instance; a key that does not exist in any locale is rendered verbatim, so you can also pass plain text.
 
 <table>
     <thead>
@@ -80,18 +117,28 @@ The dialogs label their default buttons with the following translation keys. The
     </tr>
     <tr>
         <td>cancel</td>
-        <td>Abort button of `prompt()` and `form()`</td>
+        <td>Cancel button of `prompt()` and `form()`</td>
         <td>`action.cancel`</td>
     </tr>
     <tr>
         <td>close</td>
-        <td>Default button of `info()` and the label of the close icon of every dialog</td>
+        <td>Default button of `info()`, the label of the close icon of every dialog and of the dismiss button of every toast</td>
         <td>`action.close`</td>
     </tr>
     <tr>
         <td>save</td>
         <td>Save button of `prompt()` and `form()`</td>
         <td>`action.save`</td>
+    </tr>
+    <tr>
+        <td>saveFailed</td>
+        <td>Title of the error shown inside `form()` when `finish()` or `action` throws</td>
+        <td>`dialog.saveFailed`</td>
+    </tr>
+    <tr>
+        <td>unknownError</td>
+        <td>Text of that error when the thrown value is neither an `Error`, a string nor an object with a `message`</td>
+        <td>`error.unknown`</td>
     </tr>
     </tbody>
 </table>
@@ -108,6 +155,12 @@ A matching vue-i18n message object for the defaults looks like this:
         "cancel": "Cancel",
         "close": "Close",
         "save": "Save"
+    },
+    "dialog": {
+        "saveFailed": "Couldn't save"
+    },
+    "error": {
+        "unknown": "Something went wrong"
     }
 }
 ```

@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 # Installation
 
-`@schwarzdavid/ui-kit` provides Vue 3 + Vuetify composables for promise-based dialogs, toasts, loading states and translated Vuelidate validators.
+`@schwarzdavid/ui-kit` provides Vue 3 + Vuetify composables for promise-based dialogs, toasts, loading states and translated Vuelidate validators, plus an opt-in Vuetify configuration that carries the Mail Admin design.
 
 ## Install the package
 
@@ -28,7 +28,7 @@ The package is published as ESM only. The following peer dependencies must be in
     </tr>
     <tr>
         <td>vuetify</td>
-        <td>^3.0.0 || ^4.0.0</td>
+        <td>^3.0.0 || ^4.0.0 (the `/vuetify` entry needs ^4.0.0)</td>
     </tr>
     <tr>
         <td>vue-i18n</td>
@@ -41,7 +41,7 @@ The package is published as ESM only. The following peer dependencies must be in
     </tbody>
 </table>
 
-The package has three entry points:
+The package has five entry points:
 
 <table>
     <thead>
@@ -61,26 +61,53 @@ The package has three entry points:
     </tr>
     <tr>
         <td>@schwarzdavid/ui-kit/styles</td>
-        <td>The stylesheet of the library</td>
+        <td>The stylesheet of the library's own components (dialogs, toasts, loading overlay)</td>
+    </tr>
+    <tr>
+        <td>@schwarzdavid/ui-kit/vuetify</td>
+        <td>The Mail Admin `createVuetify` configuration: themes, variables, defaults, icons and `createVuetifyOptions()`. Opt-in, see [Vuetify theme](?path=/docs/vuetify-theme--docs)</td>
+    </tr>
+    <tr>
+        <td>@schwarzdavid/ui-kit/vuetify/settings.scss</td>
+        <td>SASS settings (typography scale, radius scale) for `vite-plugin-vuetify`</td>
     </tr>
     </tbody>
 </table>
 
+## Fonts
+
+The design uses Noto Sans and JetBrains Mono. The library does not ship them; install and import them in your application:
+
+```sh
+npm install @fontsource/noto-sans @fontsource/jetbrains-mono
+```
+
+```ts
+import '@fontsource/noto-sans/400.css'
+import '@fontsource/noto-sans/500.css'
+import '@fontsource/noto-sans/600.css'
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
+```
+
+Without the fonts the theme falls back to the system sans-serif stack.
+
 ## Register the plugin
 
-Register Vuetify and vue-i18n, then install the plugin with `app.use(createUIKit(options))` and import the styles entry once. All options are optional; see [Configuration](?path=/docs/configuration--docs) for the full list and their defaults.
+Register Vuetify and vue-i18n, then install the plugin with `app.use(createUIKit(options))` and import the styles entry once. All options are optional; see [Configuration](?path=/docs/configuration--docs) for the full list and their defaults. The example uses the Mail Admin Vuetify configuration; a plain `createVuetify()` works too, the dialogs and toasts then fall back to your theme's `primary`, `on-surface` and `surface-variant` colours.
 
 ```ts
 import { createApp } from 'vue'
 import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import { createUIKit } from '@schwarzdavid/ui-kit'
+import { createVuetifyOptions } from '@schwarzdavid/ui-kit/vuetify'
 import 'vuetify/styles'
 import '@schwarzdavid/ui-kit/styles'
 import App from './App.vue'
 
 createApp(App)
-    .use(createVuetify())
+    .use(createVuetify(createVuetifyOptions()))
     .use(createI18n({ legacy: false, locale: 'en', messages: { en: {} } }))
     .use(createUIKit())
     .mount('#app')

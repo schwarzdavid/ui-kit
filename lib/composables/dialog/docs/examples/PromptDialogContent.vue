@@ -1,11 +1,9 @@
 <template>
-    <VCardItem>
-        <VTextField v-model="model" :label="label" />
-    </VCardItem>
+    <VTextField v-model="model" :label="label" />
 </template>
 
 <script lang="ts" setup>
-    import { VCardItem, VTextField } from 'vuetify/components'
+    import { VTextField } from 'vuetify/components'
 
     defineProps<{
         label: string

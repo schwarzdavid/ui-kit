@@ -1,4 +1,4 @@
-import { markRaw, readonly } from 'vue'
+import { markRaw, shallowReadonly } from 'vue'
 import type { DialogQueue } from '@/composables/dialog/types/DialogQueue'
 import type { CreateDialogQueueEntry, DialogQueueEntry } from '@/composables/dialog/types/DialogQueueEntry'
 import { createId } from '@/internal/createId'
@@ -14,7 +14,7 @@ export function useDialogQueue(): DialogQueue {
             entry.resolve(value)
         }
 
-        const reject = (reason?: string): void => {
+        const reject = (reason?: unknown): void => {
             removeFromQueue(id)
             entry.reject(reason)
         }
@@ -34,7 +34,7 @@ export function useDialogQueue(): DialogQueue {
     }
 
     return {
-        queue: readonly(dialogQueue),
+        queue: shallowReadonly(dialogQueue),
         addToQueue,
         removeFromQueue,
     }

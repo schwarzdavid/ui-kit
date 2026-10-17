@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openFormDialog">Open form dialog</VBtn>
+        <VBtn variant="flat" color="primary" @click="openFormDialog">New profile</VBtn>
     </div>
     <p v-if="result !== null" class="mt-4">Saved name: {{ result }}</p>
 </template>
@@ -16,7 +16,7 @@
 
     async function openFormDialog(): Promise<void> {
         result.value = await dialog.form<string>({
-            title: 'Create profile',
+            title: 'New profile',
             translateTitle: false,
             component: FormDialogContent,
         })

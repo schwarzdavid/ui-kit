@@ -1,15 +1,14 @@
 <template>
     <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openTextDialog">Text content</VBtn>
-        <VBtn color="primary" @click="openComponentDialog">Component content</VBtn>
-        <VBtn color="primary" @click="openAdditionalCtaDialog">Additional actions</VBtn>
-        <VBtn color="primary" @click="openChoiceCtaDialog">Simple Choice</VBtn>
+        <VBtn variant="flat" color="primary" @click="openTextDialog">Text content</VBtn>
+        <VBtn @click="openComponentDialog">Component content</VBtn>
+        <VBtn @click="openAdditionalCtaDialog">Additional actions</VBtn>
+        <VBtn @click="openChoiceCtaDialog">Simple Choice</VBtn>
     </div>
     <p v-if="actionCount" class="mt-4">Action triggered {{ actionCount }} times</p>
     <div v-if="pill" class="mt-4">
         <p>You chose: {{ pill }}</p>
-        <!-- eslint-disable-next-line vue/v-on-handler-style -->
-        <VBtn color="secondary" class="mt-2" @click="pill = null">Reset</VBtn>
+        <VBtn variant="text" class="mt-2" @click="reset">Reset</VBtn>
     </div>
 </template>
 
@@ -22,6 +21,10 @@
     const dialog = useDialog()
     const pill = ref<string | null>(null)
     const actionCount = ref(0)
+
+    function reset(): void {
+        pill.value = null
+    }
 
     function openTextDialog(): void {
         void dialog.info({
@@ -37,6 +40,7 @@
             title: 'Component Dialog',
             translateTitle: false,
             component: InfoDialogContent,
+            width: 'md',
             props: {
                 foo: 5,
             },

@@ -1,0 +1,130 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Vuetify theme" />
+
+# Vuetify theme
+
+`@schwarzdavid/ui-kit/vuetify` carries the Mail Admin design as a `createVuetify` configuration. It is a separate entry so that applications with their own theme never load it. It requires Vuetify 4: the font variables `--v-font-body` and `--v-font-heading`, the Material 3 typography roles, the `scrim` and `opacity` dialog props and the `.border-<color>` utilities do not exist in Vuetify 3.
+
+## What the export contains
+
+<table>
+    <thead>
+    <tr>
+        <th>Export</th>
+        <th>Content</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>`createVuetifyOptions(overrides?)`</td>
+        <td>Returns `{ theme, icons, defaults }` with your overrides merged on top: `theme` and `defaults` are deep-merged, `icons` are merged one level deep (`defaultSet` replaced, `aliases` and `sets` merged by key). Pass the result to `createVuetify()`.</td>
+    </tr>
+    <tr>
+        <td>`lightTheme`, `darkTheme`</td>
+        <td>Both themes with the 42 colour tokens (`primary`, `ink`, `surface-inverse`, `focus`, `success-container`, …) and the theme variables.</td>
+    </tr>
+    <tr>
+        <td>`themeVariables`</td>
+        <td>The variables shared by both themes: the interaction opacities and the Noto Sans font stack as `font-body` and `font-heading`.</td>
+    </tr>
+    <tr>
+        <td>`defaults`</td>
+        <td>Component defaults: outlined `ink` buttons, outlined comfortable fields focused in `focus`, flat bordered cards, tonal alerts, a `scrim` dialog backdrop at 48 %, inverse snackbars.</td>
+    </tr>
+    <tr>
+        <td>`icons`</td>
+        <td>The `mdi-svg` icon set with Vuetify's aliases, so only the icons you import from `@mdi/js` ship.</td>
+    </tr>
+    </tbody>
+</table>
+
+```ts
+import { createVuetify } from 'vuetify'
+import { createVuetifyOptions } from '@schwarzdavid/ui-kit/vuetify'
+
+export const vuetify = createVuetify(createVuetifyOptions({
+    theme: { defaultTheme: 'light' },
+    defaults: { VDataTableServer: { itemsPerPage: 50 } },
+}))
+```
+
+Every colour token is a Vuetify theme colour, so it is available as `color="ink-muted"`, as the class `text-ink-muted` and as `rgb(var(--v-theme-ink-muted))`. Three rules carry the design: yellow is a fill only (`variant="flat" color="primary"` with `on-primary` text), `primary-container` marks "you are here", and status colours never appear without a word.
+
+## SASS settings
+
+Two things Vuetify only exposes through SASS are the typography scale (weights and sizes of `text-headline-small`, `text-title-large`, …) and the radius scale (`rounded="md"` 6px, `rounded="lg"` 10px). `@schwarzdavid/ui-kit/vuetify/settings.scss` forwards `vuetify/settings` with both. Point `vite-plugin-vuetify` at a local file that forwards it:
+
+```scss
+@forward '@schwarzdavid/ui-kit/vuetify/settings.scss';
+```
+
+```ts
+import vuetify from 'vite-plugin-vuetify'
+
+export default defineConfig({
+    plugins: [
+        vue(),
+        vuetify({ styles: { configFile: 'src/styles/settings.scss' } }),
+    ],
+})
+```
+
+`configFile` is resolved against the project root, so `node_modules/@schwarzdavid/ui-kit/dist/vuetify/settings.scss` works as well. Both `@schwarzdavid/ui-kit/vuetify/settings.scss` and the extensionless `@schwarzdavid/ui-kit/vuetify/settings` resolve through the package exports. Without the settings file the typography roles keep Vuetify's weights (400/500 instead of 600) and the radii are 4px and 8px instead of 6px and 10px; everything else applies.
+
+## Fonts
+
+Install `@fontsource/noto-sans` (400, 500, 600) and `@fontsource/jetbrains-mono` (400, 500) and import their CSS files in your entry; see [Installation](?path=/docs/installation--docs).
+
+## Known gaps
+
+The following details of the design cannot be expressed through `createVuetify` options or the settings file. The dialogs and toasts of this library carry them in their own stylesheet; for the rest of your application copy this snippet into your global CSS.
+
+1. The 2px `focus` ring on `:focus-visible`. Vuetify only has its focus overlay.
+2. The field outline at rest is drawn at 38 % opacity by Vuetify. The defaults use `baseColor: 'ink'` as the closest approximation.
+3. The border of outlined (secondary) buttons is `currentColor`, which is `ink`, instead of `border-strong`.
+4. Monospace for `code`, `kbd`, `pre` and the `text-code-medium` / `text-code-small` roles.
+5. Slower animations under `prefers-reduced-motion`.
+
+```css
+:where(.v-btn, .v-list-item, .v-chip, .v-tab, a):focus-visible {
+    outline: 2px solid rgb(var(--v-theme-focus));
+    outline-offset: 2px;
+}
+
+.v-field:not(.v-field--focused):not(.v-field--error) .v-field__outline {
+    color: rgb(var(--v-theme-border-strong));
+    --v-field-border-opacity: 1;
+}
+
+.v-btn--variant-outlined {
+    border-color: rgb(var(--v-theme-border-strong));
+}
+
+code,
+kbd,
+pre,
+.text-code-medium,
+.text-code-small {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-variant-ligatures: none;
+}
+
+.text-code-medium {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+}
+
+.text-code-small {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .v-skeleton-loader__bone::after,
+    .v-progress-circular--indeterminate > svg,
+    .v-progress-linear__indeterminate {
+        animation-duration: 4s !important;
+    }
+}
+```

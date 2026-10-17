@@ -26,18 +26,19 @@
     </VRow>
 
     <Teleport v-if="mobile" :to="toolbar">
-        <VBtn icon="mdi-filter" variant="text" />
+        <VBtn :icon="mdiFilterOutline" variant="text" aria-label="Filters" />
     </Teleport>
 </template>
 
 <script lang="ts" setup>
     import { VBtn, VCol, VRow, VSkeletonLoader } from 'vuetify/components'
     import { useDisplay } from 'vuetify'
+    import { mdiFilterOutline } from '@mdi/js'
 
     defineProps<{
         toolbar: HTMLElement
     }>()
 
     const model = defineModel<number>()
-    const { mobile } = useDisplay()
+    const { smAndDown: mobile } = useDisplay()
 </script>

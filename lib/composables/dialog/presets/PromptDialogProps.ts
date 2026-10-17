@@ -7,6 +7,7 @@ import type {
 } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
+import type { DialogWidth } from '@/composables/dialog/types/DialogWidth'
 import type { DialogProps } from '@/composables/dialog/types/DialogProps'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -29,11 +30,6 @@ export type PromptDialogComponent<T> = ComponentPublicInstance<
     PromptDialogComponentEmits<T>
 >
 
-export enum PromptDialogSize {
-    SMALL = 'sm',
-    LARGE = 'lg',
-}
-
 export type PromptDialogProps<
     T,
     R extends boolean = false,
@@ -44,7 +40,7 @@ export type PromptDialogProps<
     saveCta?: Partial<DialogCta>
     abortCta?: Partial<DialogCta>
     initialValue?: MaybeRefOrGetter<T>
-    size?: PromptDialogSize
+    width?: DialogWidth
     required?: R
     component: C
 }

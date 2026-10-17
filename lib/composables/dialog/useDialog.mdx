@@ -14,6 +14,10 @@ Dialog util composable to functionally create dialogs. Every method returns a Pr
 
 The dialogs are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet.
 
+## Layout
+
+Every dialog shares one shell: a title, a scrolling body and a footer with the buttons in the order tertiary, then primary. Three widths exist, `sm` (440px), `md` (560px) and `lg` (720px); every method accepts a `width` option of type `DialogWidth` (`'sm' | 'md' | 'lg' | number`). Prompt and form dialogs go full screen below Vuetify's `sm` breakpoint. Escape behaves like the cancel button, a click on the backdrop does nothing.
+
 ## DialogComposable::info()
 
 Info dialogs are only meant to show information to the user or to ask for very simple choices (e.g. override/create new profile). However, **do not** use this function to ask for user confirmation, e.g. to ask the user for confirmation before deleting an entity. The `DialogComposable::confirm` is better suited for these kinds of requirement.
@@ -77,9 +81,9 @@ By calling this function, a info dialog will be created with your defined title 
     </tr>
     <tr>
         <td>width</td>
-        <td>number | string</td>
-        <td>Max width of the dialog</td>
-        <td>`650`</td>
+        <td>DialogWidth</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels</td>
+        <td>`'sm'`</td>
     </tr>
     <tr>
         <td>content (*)</td>
@@ -102,7 +106,7 @@ By calling this function, a info dialog will be created with your defined title 
     <tr>
         <td>props (*)</td>
         <td>ComponentProps&lt;component&gt;</td>
-        <td>Props to pass to the component rendered inside the dialog. Only when `component` is defined and declares props</td>
+        <td>Props for the component. Required when the component declares a required prop, optional otherwise. Vue's built-in `class`, `style`, `key` and `ref` do not count.</td>
         <td>---</td>
     </tr>
     </tbody>
@@ -293,10 +297,10 @@ Also more complex applications are possible, e.g. material selection with custom
         <td>---</td>
     </tr>
     <tr>
-        <td>size</td>
-        <td>PromptDialogSize.LARGE | PromptDialogSize.SMALL</td>
-        <td>The size of the dialog. If set to `PromptDialogSize.LARGE`, the dialog will not only be larger but also change to fullscreen on mobile devices.</td>
-        <td>`PromptDialogSize.SMALL`</td>
+        <td>width</td>
+        <td>DialogWidth</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. Prompt dialogs always go full screen on phones.</td>
+        <td>`'md'`</td>
     </tr>
     <tr>
         <td>required</td>
@@ -313,7 +317,7 @@ Also more complex applications are possible, e.g. material selection with custom
     <tr>
         <td>props (*)</td>
         <td>ComponentProps&lt;component&gt;</td>
-        <td>Props to pass to the component rendered inside the dialog. Required when the component declares props other than `modelValue` and `toolbar`.</td>
+        <td>Props for the component, without `modelValue` and `toolbar`. Required when the component declares a required prop, optional otherwise.</td>
         <td>---</td>
     </tr>
     </tbody>
@@ -357,7 +361,7 @@ Note: Properties with * are required
 
 <script lang="ts" setup>
     import { ref } from 'vue'
-    import { useDialog, PromptDialogSize } from '@schwarzdavid/ui-kit'
+    import { useDialog } from '@schwarzdavid/ui-kit'
     import PromptDialogContent from './PromptDialogContent.vue'
     import PromptDialogLargeContent from './PromptDialogLargeContent.vue'
 
@@ -379,10 +383,9 @@ Note: Properties with * are required
     async function openLargePromptDialog(): Promise<void> {
         result.value = await dialog.prompt({
             component: PromptDialogLargeContent,
-            props: {},
             title: 'Large prompt',
             translateTitle: false,
-            size: PromptDialogSize.LARGE,
+            width: 'lg',
         })
     }
 </script>
@@ -465,19 +468,19 @@ By calling this function, a confirm dialog will be created with your defined tit
     <tr>
         <td>permanent</td>
         <td>boolean</td>
-        <td>When set to true, a click on the backdrop will not resolve to `false`. Instead the dialog will stay open until the user presses the actual confirm or reject button. Also the close button right to the title will be hidden.</td>
+        <td>When set to true, Escape does nothing and the dialog stays open until the user presses the confirm or reject button.</td>
         <td>`false`</td>
     </tr>
     <tr>
-        <td>maxWidth</td>
-        <td>number | string</td>
-        <td>Max width of the dialog</td>
-        <td>`550`</td>
+        <td>width</td>
+        <td>DialogWidth</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels</td>
+        <td>`'sm'`</td>
     </tr>
     <tr>
         <td>highlightCta</td>
         <td>'confirm' | 'reject' | false</td>
-        <td>Which CTA should be elevated. If set to false, both buttons will be shown as text.</td>
+        <td>Which button gets the filled (primary) look and the last position. If set to false, both buttons are text buttons.</td>
         <td>`'confirm'`</td>
     </tr>
     <tr>
@@ -507,7 +510,7 @@ By calling this function, a confirm dialog will be created with your defined tit
     <tr>
         <td>props (*)</td>
         <td>ComponentProps&lt;component&gt;</td>
-        <td>Any data that the passed component will accept as props. Only when `component` is defined and declares props</td>
+        <td>Props for the component. Required when the component declares a required prop, optional otherwise.</td>
         <td>---</td>
     </tr>
     </tbody>
@@ -528,15 +531,15 @@ The enum defining the seriousness of the confirm dialog
     <tbody>
     <tr>
         <td>DEFAULT</td>
-        <td>No seriousness. All buttons will be in the primary color.</td>
+        <td>The highlighted button is filled in `primary`. Focus starts on the confirm button.</td>
     </tr>
     <tr>
         <td>WARNING</td>
-        <td>Medium seriousness. All buttons will be in the warning color.</td>
+        <td>The highlighted button is filled in `warning`.</td>
     </tr>
     <tr>
         <td>DANGER</td>
-        <td>High seriousness. All buttons will be in the error color.</td>
+        <td>The highlighted button is filled in `error` and focus starts on the reject button, so Enter never destroys anything by accident.</td>
     </tr>
     </tbody>
 </table>
@@ -586,7 +589,6 @@ The enum defining the seriousness of the confirm dialog
             title: 'Custom component',
             translateTitle: false,
             component: ConfirmDialogContent,
-            props: {},
             confirmCta: {
                 text: 'Confirm',
                 translateText: false,
@@ -602,7 +604,7 @@ The enum defining the seriousness of the confirm dialog
 
 ## DialogComposable::form()
 
-Form dialogs render a form component of your own inside a dialog with a save and an abort button. They validate the form with Vuelidate, read the value from the component and optionally run an asynchronous action (e.g. an API call) before closing.
+Form dialogs render a form component of your own inside a dialog with a cancel and a save button. They validate the form with Vuelidate, read the value from the component and optionally run an asynchronous action (e.g. an API call) before closing.
 
 ### Demo
 <Story of={FormDialogStories.Default} />
@@ -613,15 +615,17 @@ Form dialogs render a form component of your own inside a dialog with a save and
 
 `T` is the value your form component produces and `R` is the value the Promise resolves with. Without an `action`, `R` equals `T`.
 
-When the user clicks the save button, or the component emits `save`, the dialog:
+Your form component registers a `finish` function with `useDialogForm(finish)`. The composable returns `submit()` and `loading`; it throws when the component is not rendered inside a form dialog. The dialog body is a `<form>`, so pressing Enter in a field submits as well.
+
+When the user submits, the dialog:
 
 1. runs `useVuelidate().$validate()`, which validates every Vuelidate instance created inside your component. If the form is invalid, the dialog stays open.
-2. calls the `finish()` method exposed by your component to get the value of type `T`.
+2. calls your `finish()` to get the value of type `T`.
 3. calls `action(value)` if provided and resolves with its result, otherwise resolves with the value from `finish()`.
 
-While `finish()` and `action` run, every Vuetify input inside the dialog is disabled. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If `finish()` or `action` throws, the dialog stays open; handle errors inside `action`, for example by showing a toast.
+While `finish()` and `action` run, the submit button shows its loading state, cancel and the close icon are disabled and Escape is ignored. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If `finish()` or `action` throws, the dialog stays open and shows an error alert at the top of the body with the `saveFailed` message as title and the error's message as text (or the `unknownError` message when the thrown value carries none); the user's input is kept.
 
-When the user closes the dialog with the abort button, the close icon or the backdrop, the Promise resolves with `null`. With `rejectOnEmpty: true` it rejects instead, and it also rejects when the result is `null`.
+When the user closes the dialog with the cancel button, the close icon or Escape, the Promise resolves with `null`. With `rejectOnEmpty: true` it rejects instead, and it also rejects when the result is `null`.
 
 **FormDialogProps&lt;R, T, RejectOnEmpty&gt;**
 <table>
@@ -647,6 +651,12 @@ When the user closes the dialog with the abort button, the close icon or the bac
         <td>`true`</td>
     </tr>
     <tr>
+        <td>width</td>
+        <td>DialogWidth</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. Form dialogs always go full screen on phones.</td>
+        <td>`'md'`</td>
+    </tr>
+    <tr>
         <td>saveCta</td>
         <td>Partial&lt;DialogCta&gt;</td>
         <td>Customize the save button. The default text comes from the plugin option `i18n.messages.save`.</td>
@@ -662,7 +672,7 @@ When the user closes the dialog with the abort button, the close icon or the bac
     <tr>
         <td>abortCta</td>
         <td>Partial&lt;DialogCta&gt;</td>
-        <td>Customize the abort button. The default text comes from the plugin option `i18n.messages.cancel`.</td>
+        <td>Customize the cancel button. The default text comes from the plugin option `i18n.messages.cancel`.</td>
         <td>
             ```ts
             {
@@ -674,14 +684,14 @@ When the user closes the dialog with the abort button, the close icon or the bac
     </tr>
     <tr>
         <td>component *</td>
-        <td>FormDialogComponent&lt;T&gt;</td>
-        <td>The form component. It must expose `finish(): Promisable<T>` (type `FormDialogComponentExposed<T>`) and may emit `save` (type `FormDialogComponentEmits`) to submit the form, e.g. on enter.</td>
+        <td>Component</td>
+        <td>The form component. It must call `useDialogForm(finish)` with a function returning `T` (or a Promise of it).</td>
         <td>---</td>
     </tr>
     <tr>
         <td>action</td>
         <td>(value: T) =&gt; Promise&lt;R&gt;</td>
-        <td>Called with the value from `finish()` after successful validation. The dialog resolves with its result.</td>
+        <td>Called with the value from `finish()` after successful validation. The dialog resolves with its result. Throw to keep the dialog open and show the error.</td>
         <td>---</td>
     </tr>
     <tr>
@@ -693,7 +703,7 @@ When the user closes the dialog with the abort button, the close icon or the bac
     <tr>
         <td>props (*)</td>
         <td>ComponentProps&lt;component&gt;</td>
-        <td>Props to pass to the form component. Required when the component declares props.</td>
+        <td>Props for the form component. Required when the component declares a required prop, optional otherwise.</td>
         <td>---</td>
     </tr>
     </tbody>
@@ -701,35 +711,47 @@ When the user closes the dialog with the abort button, the close icon or the bac
 
 Note: Properties with * are required
 
+**DialogFormContext** (returned by `useDialogForm`)
+<table>
+    <thead>
+    <tr>
+        <th>Member</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>submit()</td>
+        <td>() =&gt; Promise&lt;void&gt;</td>
+        <td>Submits the dialog, exactly like the save button</td>
+    </tr>
+    <tr>
+        <td>loading</td>
+        <td>Readonly&lt;Ref&lt;boolean&gt;&gt;</td>
+        <td>True while `finish()` and `action` run</td>
+    </tr>
+    </tbody>
+</table>
+
 ### Example implementation
 
-The form component validates its state with Vuelidate and exposes `finish()`:
+The form component validates its state with Vuelidate and registers `finish`:
 
 ```vue
 <template>
-    <VCardText>
-        <form @submit.prevent="emit('save')">
-            <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error" />
-            <VTextField v-model.number="v.age.$model" label="Age" type="number" :error="v.age.$error" />
-            <VDateInput v-model="v.date.$model" label="Date" :error="v.date.$error" />
-            <button type="submit" class="d-none" />
-        </form>
-    </VCardText>
+    <div class="d-flex flex-column ga-5">
+        <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error" />
+        <VTextField v-model.number="v.age.$model" label="Age" type="number" :error="v.age.$error" />
+        <VDateInput v-model="v.date.$model" label="Date" :error="v.date.$error" />
+    </div>
 </template>
 
 <script lang="ts" setup>
     import { ref } from 'vue'
     import useVuelidate from '@vuelidate/core'
-    import type { FormDialogComponentEmits, FormDialogComponentExposed } from '@schwarzdavid/ui-kit'
+    import { useDialogForm } from '@schwarzdavid/ui-kit'
     import { maxLength, minLength, required } from '@schwarzdavid/ui-kit/validators'
-
-    const emit = defineEmits<FormDialogComponentEmits>()
-
-    defineExpose<FormDialogComponentExposed<string>>({
-        finish(): Promise<string> {
-            return Promise.resolve(state.value.name)
-        },
-    })
 
     const state = ref<{ name: string, age: number | null, date: Date }>({
         name: '',
@@ -742,6 +764,8 @@ The form component validates its state with Vuelidate and exposes `finish()`:
         age: { required },
         date: { required },
     }, state)
+
+    useDialogForm(() => state.value.name)
 </script>
 ```
 
@@ -749,7 +773,7 @@ The calling component opens the dialog and stores the result:
 
 ```vue
 <template>
-    <VBtn color="primary" @click="openFormDialog">Open form dialog</VBtn>
+    <VBtn variant="flat" color="primary" @click="openFormDialog">New profile</VBtn>
     <p v-if="result !== null" class="mt-4">Saved name: {{ result }}</p>
 </template>
 
@@ -763,7 +787,7 @@ The calling component opens the dialog and stores the result:
 
     async function openFormDialog(): Promise<void> {
         result.value = await dialog.form<string>({
-            title: 'Create profile',
+            title: 'New profile',
             translateTitle: false,
             component: FormDialogContent,
         })
@@ -771,7 +795,7 @@ The calling component opens the dialog and stores the result:
 </script>
 ```
 
-To persist the value before the dialog closes, pass an `action`. The dialog then resolves with the action's result:
+To persist the value before the dialog closes, pass an `action`. The dialog then resolves with the action's result, and a thrown error stays inside the dialog:
 
 ```ts
 const profile = await dialog.form<Profile, string>({

@@ -17,6 +17,7 @@ describe('usePluginContext', () => {
         expect(context.dialogQueue.value).toEqual([])
         expect(context.toastQueue.value).toEqual([])
         expect(context.loadingOverlay.value).toBe(false)
+        expect(context.toastTimers.size).toBe(0)
     })
 
     it('returns the context inside component setup', () => {

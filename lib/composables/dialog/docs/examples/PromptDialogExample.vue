@@ -1,19 +1,17 @@
 <template>
-    <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openPromptDialog">Translated Input</VBtn>
-        <VBtn color="primary" @click="openLargePromptDialog">Complex Prompt</VBtn>
+    <div class="d-flex flex-wrap ga-4">
+        <VBtn variant="flat" color="primary" @click="openPromptDialog">Rename</VBtn>
+        <VBtn @click="openLargePromptDialog">Large prompt</VBtn>
     </div>
     <div v-if="result" class="mt-4">
         <p>Last prompt value: {{ result }}</p>
-        <!-- eslint-disable-next-line vue/v-on-handler-style -->
-        <VBtn color="secondary" class="mt-2" @click="result = null">Reset</VBtn>
+        <VBtn variant="text" class="mt-2" @click="reset">Reset</VBtn>
     </div>
 </template>
 
 <script lang="ts" setup>
     import { ref } from 'vue'
     import { useDialog } from '@/composables/dialog/useDialog'
-    import { PromptDialogSize } from '@/composables/dialog/presets/PromptDialogProps'
     import PromptDialogContent from '@/composables/dialog/docs/examples/PromptDialogContent.vue'
     import PromptDialogLargeContent from '@/composables/dialog/docs/examples/PromptDialogLargeContent.vue'
     import { VBtn } from 'vuetify/components'
@@ -21,25 +19,29 @@
     const dialog = useDialog()
     const result = ref<unknown>(null)
 
+    function reset(): void {
+        result.value = null
+    }
+
     async function openPromptDialog(): Promise<void> {
         result.value = await dialog.prompt({
             component: PromptDialogContent,
             props: {
-                label: 'Example translated input',
+                label: 'Name',
             },
-            initialValue: '',
-            title: 'Testprompt',
+            initialValue: 'Contact request',
+            title: 'Rename inbound form',
             translateTitle: false,
+            required: true,
         })
     }
 
     async function openLargePromptDialog(): Promise<void> {
         result.value = await dialog.prompt({
             component: PromptDialogLargeContent,
-            props: {},
-            title: 'Large prompt',
+            title: 'Choose a template',
             translateTitle: false,
-            size: PromptDialogSize.LARGE,
+            width: 'lg',
         })
     }
 </script>

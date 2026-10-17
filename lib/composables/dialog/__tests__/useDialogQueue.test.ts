@@ -7,7 +7,7 @@ import { runWithUiKit } from '@/__tests__/helpers/createTestApp'
 const Dummy = defineComponent({ render: () => null })
 
 function createEntry(resolve = vi.fn(), reject = vi.fn()): CreateDialogQueueEntry {
-    return { component: Dummy, props: {}, resolve, reject }
+    return { component: Dummy, data: {}, resolve, reject }
 }
 
 describe('useDialogQueue', () => {

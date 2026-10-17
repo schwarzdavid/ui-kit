@@ -3,7 +3,7 @@ import { ToastType } from '@/composables/toast/types/ToastType'
 import type { ToastOptions } from '@/composables/toast/types/ToastOptions'
 import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
-export type ToastFunction = (message: string, options?: Partial<ToastOptions>) => Promise<void>
+export type ToastFunction = (message: string, options?: Partial<ToastOptions>) => Promise<boolean>
 
 export interface ToastComposable {
     info: ToastFunction
@@ -16,13 +16,18 @@ export function useToast(): ToastComposable {
     const toastQueue = useToastQueue()
     const { options: { toast: defaultOptions } } = usePluginContext()
 
+    function defaultTimeout(type: ToastType): number | false {
+        return type === ToastType.ERROR ? defaultOptions.errorTimeout : defaultOptions.timeout
+    }
+
     function createToastFunction(type: ToastType): ToastFunction {
         return (message, options) => new Promise((resolve) => {
             toastQueue.addToQueue({
                 message,
                 resolve,
-                timeout: options?.timeout ?? defaultOptions.timeout,
+                timeout: options?.timeout ?? defaultTimeout(type),
                 translateMessage: options?.translateMessage ?? true,
+                action: options?.action,
                 type,
             })
         })

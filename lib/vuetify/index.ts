@@ -1,0 +1,5 @@
+export { lightTheme, darkTheme } from '@/vuetify/themes'
+export { themeVariables } from '@/vuetify/variables'
+export { defaults } from '@/vuetify/defaults'
+export { icons } from '@/vuetify/icons'
+export { createVuetifyOptions } from '@/vuetify/createVuetifyOptions'

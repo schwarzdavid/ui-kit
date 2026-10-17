@@ -5,11 +5,11 @@ import * as PresetStories from './docs/stories/PresetToasts.stories.ts'
 
 # useToast
 
-Toast util composable to functionally show toasts.
+Toast util composable to functionally show snackbars.
 
 ## General Usage
 
-The toasts are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet.
+The toasts are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet. They stack bottom-centred, the newest closest to the edge, at most 560px wide. Each toast shows a monochrome outline icon for its type, the message, an optional action and a dismiss button. Error toasts use `role="alert"` and stay until dismissed; the others disappear after `toast.timeout`. Screen readers hear every non-error toast through a persistent, visually hidden polite live region that the outlet keeps next to the stack, so a message is announced even though the toast itself is inserted with its text.
 
 ## Success/Info/Warning/Error Toasts
 
@@ -23,7 +23,7 @@ The ToastComposable comes with four different presets.
 
 `useToast(): ToastComposable` returns the four functions `success`, `info`, `warn` and `error`. Each of them is a `ToastFunction`:
 
-`(message: string, options?: Partial<ToastOptions>) => Promise<void>`
+`(message: string, options?: Partial<ToastOptions>) => Promise<boolean>`
 
 The message is passed through vue-i18n: if a matching translation key exists it is translated, otherwise the text is shown verbatim.
 
@@ -40,9 +40,9 @@ The message is passed through vue-i18n: if a matching translation key exists it 
     <tbody>
     <tr>
         <td>timeout</td>
-        <td>number</td>
-        <td>Time in milliseconds after which the toast disappears</td>
-        <td>The plugin option `toast.timeout` (`4000`)</td>
+        <td>number | false</td>
+        <td>Time in milliseconds after which the toast disappears. `false` keeps it until the user dismisses it or triggers the action.</td>
+        <td>The plugin option `toast.timeout` (`4000`); for `error` the plugin option `toast.errorTimeout` (`false`)</td>
     </tr>
     <tr>
         <td>translateMessage</td>
@@ -50,18 +50,40 @@ The message is passed through vue-i18n: if a matching translation key exists it 
         <td>If the message should be translated</td>
         <td>`true`</td>
     </tr>
+    <tr>
+        <td>action</td>
+        <td>ToastAction</td>
+        <td>An optional action button: `text`, `translateText` (default `true`) and an optional `handler` that runs when the user clicks it. Clicking the action closes the toast.</td>
+        <td>---</td>
+    </tr>
     </tbody>
 </table>
 
-The returned Promise resolves when the toast disappears, either because its timeout elapsed or because the user closed it. You can ignore it for fire-and-forget toasts or await it to continue after the toast is gone.
+The returned Promise resolves when the toast disappears: with `true` when the user triggered the action, with `false` when the timeout elapsed or the user dismissed it. Ignore it for fire-and-forget toasts, or await it to continue after the toast is gone.
+
+### Undo pattern
+
+Remove the item right away, offer Undo, and send the request only when the toast ends without Undo:
+
+```ts
+async function removeField(field: Field): Promise<void> {
+    fields.value = fields.value.filter(candidate => candidate.id !== field.id)
+    const undone = await toast.success('fields.removed', { timeout: 8000, action: { text: 'action.undo' } })
+    if (undone) {
+        fields.value = [...fields.value, field]
+        return
+    }
+    await api.deleteField(field.id)
+}
+```
 
 ### Example implementation
 
 ```vue
 <template>
     <div class="d-flex ga-4">
-        <VBtn color="success" @click="showSuccessToast">Success toast</VBtn>
-        <VBtn color="error" @click="showErrorToast">Error toast</VBtn>
+        <VBtn variant="flat" color="primary" @click="showSuccessToast">Success toast</VBtn>
+        <VBtn @click="showErrorToast">Error toast</VBtn>
     </div>
 </template>
 
@@ -74,9 +96,15 @@ The returned Promise resolves when the toast disappears, either because its time
         void toast.success('items.saved')
     }
 
-    async function showErrorToast(): Promise<void> {
-        await toast.error('Upload failed', { translateMessage: false, timeout: 8000 })
-        void toast.info('You can retry the upload now', { translateMessage: false })
+    function showErrorToast(): void {
+        void toast.error('Upload failed', {
+            translateMessage: false,
+            action: { text: 'Retry', translateText: false, handler: upload },
+        })
+    }
+
+    function upload(): void {
+        void toast.info('Uploading again', { translateMessage: false })
     }
 </script>
 ```

@@ -29,6 +29,11 @@ export default [
     {
         ...vitest.configs.recommended,
         files: ['lib/**/__tests__/**/*.test.ts'],
+        rules: {
+            ...vitest.configs.recommended.rules,
+            'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'expectTypeOf'] }],
+            'vue/one-component-per-file': 'off',
+        },
     },
     {
         languageOptions: {

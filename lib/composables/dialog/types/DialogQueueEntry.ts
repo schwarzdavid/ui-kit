@@ -1,21 +1,12 @@
-import type { ComponentProps } from 'vue-component-type-helpers'
-import type { DialogComponent } from '@/composables/dialog/types/DialogComponent'
+import type { Component } from 'vue'
 
-export interface DialogQueueEntry<
-    Value = unknown,
-    Component extends DialogComponent<Value> = DialogComponent<Value>,
-> extends CreateDialogQueueEntry<Value, Component> {
-    id: string
+export interface CreateDialogQueueEntry<Value = unknown, Data = unknown> {
+    component: Component
+    data: Data
+    resolve(value: Value): void
+    reject(reason?: unknown): void
 }
 
-export interface CreateDialogQueueEntry<
-    Value = unknown,
-    Component extends DialogComponent<Value> = DialogComponent<Value>,
-> {
-    component: Component
-    props: ComponentProps<Component>
-
-    resolve(value: Value): void
-
-    reject(reason?: string): void
+export interface DialogQueueEntry<Value = unknown, Data = unknown> extends CreateDialogQueueEntry<Value, Data> {
+    id: string
 }

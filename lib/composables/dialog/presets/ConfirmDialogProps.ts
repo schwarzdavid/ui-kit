@@ -2,6 +2,7 @@ import type { Component } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import type { DialogCta } from '@/composables/dialog/types/DialogCta'
 import type { DialogProps } from '@/composables/dialog/types/DialogProps'
+import type { DialogWidth } from '@/composables/dialog/types/DialogWidth'
 
 export enum ConfirmDialogLevel {
     DEFAULT = 'primary',
@@ -16,7 +17,7 @@ interface ConfirmDialogBaseProps {
     rejectCta?: Partial<DialogCta>
     throwOnReject?: boolean
     permanent?: boolean
-    maxWidth?: number | string
+    width?: DialogWidth
     highlightCta?: 'confirm' | 'reject' | false
     level?: ConfirmDialogLevel
 }

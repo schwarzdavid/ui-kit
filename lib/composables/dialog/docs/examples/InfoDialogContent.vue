@@ -1,6 +1,6 @@
 <template>
-    <VCardText>Prop "foo" has value: {{ foo }}</VCardText>
-    <VTable>
+    <p class="ma-0">Prop "foo" has value: {{ foo }}</p>
+    <VTable density="compact">
         <thead>
             <tr>
                 <th>Column 1</th>
@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { VCardText, VTable } from 'vuetify/components'
+    import { VTable } from 'vuetify/components'
 
     defineProps<{
         foo: number

@@ -1,0 +1,157 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks'
+import * as CustomPresetsStories from './stories/CustomPresets.stories.ts'
+
+<Meta title="Custom presets" />
+
+# Custom presets
+
+The components that render dialogs and toasts are plugin options. Replace any of them when your application needs a different template, for example a bottom sheet instead of a centred dialog.
+
+```ts
+app.use(createUIKit({
+    components: {
+        dialog: { confirm: MyConfirmDialog },
+        toast: MyToast,
+    },
+}))
+```
+
+Each component is replaced as a whole; the ones you leave out stay the built-in presets.
+
+## Demo
+
+The demo registers a bottom-sheet confirm dialog and a pill-shaped toast.
+
+<Story of={CustomPresetsStories.Default} />
+
+## The dialog contract
+
+A dialog component receives no props and emits nothing. It reads its entry through `useDialogEntry()`:
+
+```ts
+const { data, resolve, reject } = useDialogEntry<ConfirmDialogProps, boolean>()
+```
+
+<table>
+    <thead>
+    <tr>
+        <th>Member</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>id</td>
+        <td>string</td>
+        <td>The queue id of this dialog</td>
+    </tr>
+    <tr>
+        <td>data</td>
+        <td>Data</td>
+        <td>The options the caller passed to `dialog.info()`, `confirm()`, `prompt()` or `form()`: `InfoDialogProps`, `ConfirmDialogProps`, `PromptDialogProps` or `FormDialogProps`</td>
+    </tr>
+    <tr>
+        <td>resolve(value)</td>
+        <td>(value: Value) =&gt; void</td>
+        <td>Removes the dialog and resolves the caller's Promise</td>
+    </tr>
+    <tr>
+        <td>reject(reason?)</td>
+        <td>(reason?: unknown) =&gt; void</td>
+        <td>Removes the dialog and rejects the caller's Promise</td>
+    </tr>
+    </tbody>
+</table>
+
+Call `resolve` or `reject` after your leave transition so the dialog animates out before it is removed. The component is mounted when the entry is queued and unmounted as soon as it settles. A form dialog replacement must also `provide` the form context that `useDialogForm()` expects; copy the built-in preset as the starting point.
+
+```vue
+<template>
+    <VBottomSheet :model-value="open" inset @update:model-value="() => close(false)" @after-leave="settle">
+        <VSheet class="pa-6 text-center">
+            <h2 class="text-title-large mb-2">{{ data.title }}</h2>
+            <p v-if="'content' in data" class="mb-6">{{ data.content }}</p>
+            <div class="d-flex justify-center ga-2">
+                <VBtn variant="text" @click="() => close(false)">No</VBtn>
+                <VBtn variant="flat" color="primary" @click="() => close(true)">Yes</VBtn>
+            </div>
+        </VSheet>
+    </VBottomSheet>
+</template>
+
+<script lang="ts" setup>
+    import { ref } from 'vue'
+    import { useDialogEntry, type ConfirmDialogProps } from '@schwarzdavid/ui-kit'
+
+    const { data, resolve } = useDialogEntry<ConfirmDialogProps, boolean>()
+    const open = ref(true)
+
+    let confirmed = false
+
+    function close(value: boolean): void {
+        confirmed = value
+        open.value = false
+    }
+
+    function settle(): void {
+        resolve(confirmed)
+    }
+</script>
+```
+
+## The toast contract
+
+A toast component reads its entry through `useToastEntry()`. Timers live in the queue, so the component only renders and forwards clicks.
+
+```ts
+const { entry, close, trigger } = useToastEntry()
+```
+
+<table>
+    <thead>
+    <tr>
+        <th>Member</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>entry</td>
+        <td>ToastEntryData</td>
+        <td>`id`, `type` (`ToastType`), `message`, `translateMessage`, `timeout` and the optional `action` (`text`, `translateText`, `handler`)</td>
+    </tr>
+    <tr>
+        <td>close()</td>
+        <td>() =&gt; void</td>
+        <td>Removes the toast and resolves the caller's Promise with `false`</td>
+    </tr>
+    <tr>
+        <td>trigger()</td>
+        <td>() =&gt; void</td>
+        <td>Removes the toast, resolves the caller's Promise with `true` and runs `entry.action.handler`</td>
+    </tr>
+    </tbody>
+</table>
+
+A custom toast must settle through `close()` or `trigger()`; the raw queue entry is not part of the contract.
+
+```vue
+<template>
+    <VSheet class="d-flex align-center ga-2 px-4 py-2" color="primary" rounded="pill" :role="entry.type === ToastType.ERROR ? 'alert' : undefined">
+        <span class="flex-grow-1">{{ entry.message }}</span>
+        <VBtn v-if="entry.action" variant="text" size="small" @click="trigger">{{ entry.action.text }}</VBtn>
+        <VBtn variant="text" size="small" :icon="`svg:${mdiClose}`" aria-label="Dismiss" @click="close" />
+    </VSheet>
+</template>
+
+<script lang="ts" setup>
+    import { mdiClose } from '@mdi/js'
+    import { ToastType, useToastEntry } from '@schwarzdavid/ui-kit'
+
+    const { entry, close, trigger } = useToastEntry()
+</script>
+```
+
+The toast outlet stacks the toasts bottom-centred with `pointer-events: none` on the container, so give your root element `pointer-events: auto`. A custom toast component must render exactly one root element, because the outlet renders it inside a `TransitionGroup`. The outlet announces every non-error toast through its own polite live region, so a custom toast needs no `role` of its own; give error toasts `role="alert"` so they are announced at once.

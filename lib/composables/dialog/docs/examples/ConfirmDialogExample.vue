@@ -1,14 +1,13 @@
 <template>
-    <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openDefaultConfirmDialog">Default Confirm choice</VBtn>
-        <VBtn color="primary" @click="openWarningConfirmDialog">Warning choice</VBtn>
-        <VBtn color="primary" @click="openDangerousConfirmDialog">Dangerous choice</VBtn>
-        <VBtn color="primary" @click="openCustomConfirmDialog">Custom content</VBtn>
+    <div class="d-flex flex-wrap ga-4">
+        <VBtn variant="flat" color="primary" @click="openDefaultConfirmDialog">Default confirm</VBtn>
+        <VBtn @click="openWarningConfirmDialog">Warning</VBtn>
+        <VBtn @click="openDangerousConfirmDialog">Destructive</VBtn>
+        <VBtn @click="openCustomConfirmDialog">Custom content</VBtn>
     </div>
     <div v-if="lastChoice !== null" class="mt-4">
         <p>Last confirm value: {{ lastChoice }}</p>
-        <!-- eslint-disable-next-line vue/v-on-handler-style -->
-        <VBtn color="secondary" class="mt-2" @click="lastChoice=null">Reset</VBtn>
+        <VBtn variant="text" class="mt-2" @click="reset">Reset</VBtn>
     </div>
 </template>
 
@@ -22,33 +21,43 @@
     const dialog = useDialog()
     const lastChoice = ref<boolean | null>(null)
 
+    function reset(): void {
+        lastChoice.value = null
+    }
+
     async function openDefaultConfirmDialog(): Promise<void> {
         lastChoice.value = await dialog.confirm({
-            title: 'Are you sure?',
+            title: 'Publish draft v4?',
             translateTitle: false,
-            content: 'Please confirm your choice to process',
+            content: 'New submissions to sales@acme.com will use this template right away. Published v3 stays in the version history.',
             translateContent: false,
+            confirmCta: { text: 'Publish', translateText: false },
+            rejectCta: { text: 'Cancel', translateText: false },
         })
     }
 
     async function openWarningConfirmDialog(): Promise<void> {
         lastChoice.value = await dialog.confirm({
-            title: 'Warning',
+            title: 'Change the sending domain?',
             translateTitle: false,
-            content: 'This change cannot be reverted',
+            content: 'Mails already queued keep the old domain. New mails use the new one right away.',
             translateContent: false,
             level: ConfirmDialogLevel.WARNING,
+            confirmCta: { text: 'Change domain', translateText: false },
+            rejectCta: { text: 'Cancel', translateText: false },
         })
     }
 
     async function openDangerousConfirmDialog(): Promise<void> {
         lastChoice.value = await dialog.confirm({
-            title: 'Attention!',
+            title: 'Delete user Lisa Schneider?',
             translateTitle: false,
-            content: 'Are you sure to delete this item? This change cannot be undone and can be potentially dangerous. (The dialog is permanent)',
+            content: 'Lisa Schneider loses access immediately and is removed from 2 projects. This can\'t be undone. The dialog is permanent, so Escape does nothing.',
             translateContent: false,
             level: ConfirmDialogLevel.DANGER,
             permanent: true,
+            confirmCta: { text: 'Delete user', translateText: false },
+            rejectCta: { text: 'Cancel', translateText: false },
         })
     }
 
@@ -57,15 +66,9 @@
             title: 'Custom component',
             translateTitle: false,
             component: ConfirmDialogContent,
-            props: {},
-            confirmCta: {
-                text: 'Confirm',
-                translateText: false,
-            },
-            rejectCta: {
-                text: 'Abort',
-                translateText: false,
-            },
+            width: 'md',
+            confirmCta: { text: 'Confirm', translateText: false },
+            rejectCta: { text: 'Cancel', translateText: false },
         })
     }
 </script>

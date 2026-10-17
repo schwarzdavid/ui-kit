@@ -1,69 +1,108 @@
 <template>
+    <div class="ui-toast-outlet__announcer" aria-live="polite" aria-atomic="true">
+        <MaybeTranslation v-if="announced" :content="announced.message" :translate="announced.translateMessage" />
+    </div>
     <TransitionGroup
-        name="fade"
+        name="ui-toast"
         tag="div"
-        class="toast-outlet"
-        :class="outletClasses"
-        role="status"
-        aria-live="polite"
+        class="ui-toast-outlet"
+        :class="{ 'ui-toast-outlet--mobile': xs }"
         @before-leave="onBeforeLeave">
-        <ToastEntry v-for="entry in queue" :key="entry.id" :entry="entry" />
+        <ToastEntryProvider v-for="entry in queue" :key="entry.id" :entry="entry" />
     </TransitionGroup>
 </template>
 
 <script lang="ts" setup>
-    import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
-    import ToastEntry from '@/composables/toast/components/ToastEntry.vue'
+    import { nextTick, shallowRef, watch } from 'vue'
     import { useDisplay } from 'vuetify'
-    import { computed } from 'vue'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
+    import ToastEntryProvider from '@/composables/toast/components/ToastEntryProvider.vue'
+    import type { ToastQueueEntry } from '@/composables/toast/types/ToastQueueEntry'
+    import { ToastType } from '@/composables/toast/types/ToastType'
 
     const { queue } = useToastQueue()
-    const { mobile } = useDisplay()
+    const { xs } = useDisplay()
+    const announced = shallowRef<ToastQueueEntry | null>(null)
+    const announcedEntries = new WeakSet<ToastQueueEntry>()
 
-    const outletClasses = computed(() => mobile.value ? '' : 'toast-outlet--desktop')
+    watch(() => queue.value.at(-1), (latest) => {
+        if (!latest || latest.type === ToastType.ERROR || announcedEntries.has(latest)) {
+            return
+        }
+        announcedEntries.add(latest)
+        announced.value = null
+        void nextTick(() => {
+            announced.value = latest
+        })
+    })
 
     function onBeforeLeave(el: Element): void {
-        const { width } = el.getBoundingClientRect()
         if (el instanceof HTMLElement) {
+            const { width } = el.getBoundingClientRect()
             el.style.width = `${width.toFixed()}px`
         }
     }
 </script>
 
-<style lang="scss" scoped>
-@use "vuetify/settings";
+<style lang="scss">
+.ui-toast-outlet__announcer {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
 
-.toast-outlet {
+.ui-toast-outlet {
     position: fixed;
+    left: 50%;
+    bottom: 16px;
     z-index: 9999;
-    bottom: settings.$spacer * 2;
-    right: settings.$spacer * 2;
-    left: settings.$spacer * 2;
     display: flex;
     flex-direction: column;
-    row-gap: settings.$spacer * 2;
+    gap: 8px;
+    width: calc(100% - 32px);
+    max-width: 560px;
+    transform: translateX(-50%);
     pointer-events: none;
-
-    &--desktop {
-        left: unset;
-        max-width: 500px;
-        width: 100%;
-    }
 }
 
-.fade-move,
-.fade-enter-active,
-.fade-leave-active {
-    transition: all settings.$transition-duration-root settings.$fab-transition-timing-function;
+.ui-toast-outlet--mobile {
+    bottom: 8px;
+    width: calc(100% - 16px);
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.ui-toast-move,
+.ui-toast-enter-active,
+.ui-toast-leave-active {
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.ui-toast-enter-from,
+.ui-toast-leave-to {
     opacity: 0;
-    transform: translate(50%, 0) scaleY(0.5);
+    transform: translateY(8px);
 }
 
-.fade-leave-active {
+.ui-toast-leave-active {
     position: absolute;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-toast-move,
+    .ui-toast-enter-active,
+    .ui-toast-leave-active {
+        transition-duration: 0s;
+    }
+
+    .ui-toast-enter-from,
+    .ui-toast-leave-to {
+        transform: none;
+    }
 }
 </style>

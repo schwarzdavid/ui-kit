@@ -8,6 +8,7 @@ export function createPluginContext(options: PluginOptions): PluginContext {
     return {
         dialogQueue: ref<DialogQueueEntry[]>([]),
         toastQueue: ref<ToastQueueEntry[]>([]),
+        toastTimers: new Map(),
         loadingOverlay: ref(false),
         options,
     }

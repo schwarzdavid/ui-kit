@@ -1,110 +1,118 @@
 <template>
-    <VDialog
-        v-model="dialogModel"
+    <DialogFrame
+        :model-value="open"
+        :title="data.title"
+        :translate-title="data.translateTitle"
+        :width="data.width ?? 'sm'"
+        :closable="false"
         :persistent="!!data.permanent"
-        :max-width="data.maxWidth ?? DEFAULT_MAX_WIDTH"
-        @after-leave="resolveDialog">
-        <VCard class="confirm-dialog-card">
-            <div class="d-flex justify-space-between pr-2 py-2">
-                <VCardTitle>
-                    <MaybeTranslation :translate="data.translateTitle" :content="data.title" />
-                </VCardTitle>
-                <VBtn v-if="!data.permanent" icon="$close" variant="text" :aria-label="closeLabel" @click="closeDialog" />
-            </div>
-
-            <VCardText v-if="textContent">
-                <MaybeTranslation :translate="textContent.translateContent" :content="textContent.content" />
-            </VCardText>
-
-            <component :is="componentContent.component" v-if="componentContent" v-bind="componentContent.props" />
-
-            <VCardActions class="justify-end">
-                <div class="d-flex align-center" :class="highlightCta === 'confirm' ? '' : 'flex-row-reverse'">
-                    <VBtn
-                        :variant="highlightCta === 'reject' ? 'elevated' : 'text'"
-                        :color="ctaColor"
-                        @click="closeDialog">
-                        <MaybeTranslation :translate="rejectCta.translateText" :content="rejectCta.text" />
-                    </VBtn>
-                    <VBtn
-                        :variant="highlightCta === 'confirm' ? 'elevated' : 'text'"
-                        :color="ctaColor"
-                        @click="finishDialog">
-                        <MaybeTranslation :translate="confirmCta.translateText" :content="confirmCta.text" />
-                    </VBtn>
-                </div>
-            </VCardActions>
-        </VCard>
-    </VDialog>
+        @close="rejectDialog"
+        @opened="focusInitial"
+        @closed="settle">
+        <p v-if="'content' in data" class="ui-dialog__text">
+            <MaybeTranslation :content="data.content" :translate="data.translateContent" />
+        </p>
+        <component :is="data.component" v-else v-bind="componentProps" />
+        <template #actions>
+            <VBtn
+                v-for="button in buttons"
+                :key="button.key"
+                :ref="element => setButton(button.key, element)"
+                :variant="button.variant"
+                :color="button.color"
+                @click="button.onClick">
+                <MaybeTranslation :content="button.cta.text" :translate="button.cta.translateText" />
+            </VBtn>
+        </template>
+    </DialogFrame>
 </template>
 
 <script lang="ts" setup>
-    import { VBtn, VCard, VCardActions, VCardText, VCardTitle, VDialog } from 'vuetify/components'
-    import { computed, ref } from 'vue'
+    import { type ComponentPublicInstance, computed, ref } from 'vue'
+    import { VBtn } from 'vuetify/components'
+    import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
-    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
-    import type {
-        ConfirmDialogComponentContent,
-        ConfirmDialogProps,
-        ConfirmDialogTextContent,
-    } from '@/composables/dialog/presets/ConfirmDialogProps'
+    import { ConfirmDialogLevel, type ConfirmDialogProps } from '@/composables/dialog/presets/ConfirmDialogProps'
+    import type { DialogCta } from '@/composables/dialog/types/DialogCta'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
-    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
+    import { useDialogEntry } from '@/composables/dialog/useDialogEntry'
 
-    const props = defineProps<{ data: ConfirmDialogProps }>()
-    const emit = defineEmits<DialogComponentEmits<boolean>>()
+    type ButtonKey = 'reject' | 'confirm'
 
-    const DEFAULT_MAX_WIDTH = 550
-
-    const confirmCta = useDialogCta(props.data.confirmCta, 'yes')
-    const rejectCta = useDialogCta(props.data.rejectCta, 'no')
-    const translate = useMaybeTranslation()
-    const closeCta = useDialogCta(undefined, 'close')
-    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
-
-    let resolveValue = false
-
-    const dialogModel = ref(true)
-    const textContent = computed<Pick<ConfirmDialogTextContent, 'content' | 'translateContent'> | null>(() => Object.hasOwn(props.data, 'content')
-        ? {
-            content: (props.data as ConfirmDialogTextContent).content,
-            translateContent: (props.data as ConfirmDialogTextContent).translateContent,
-        }
-        : null)
-    const componentContent = computed<Pick<ConfirmDialogComponentContent, 'component' | 'props'> | null>(() => Object.hasOwn(props.data, 'component')
-        ? {
-            component: (props.data as ConfirmDialogComponentContent).component,
-            props: (props.data as ConfirmDialogComponentContent).props,
-        }
-        : null)
-    const highlightCta = computed<ConfirmDialogProps['highlightCta']>(() => props.data.highlightCta ?? 'confirm')
-    const ctaColor = computed<string>(() => props.data.level ?? 'primary')
-
-    function closeDialog(): void {
-        dialogModel.value = false
+    interface ButtonDescriptor {
+        key: ButtonKey
+        cta: DialogCta
+        variant: 'flat' | 'text'
+        color: string | undefined
+        onClick: () => void
     }
 
-    function finishDialog(): void {
-        resolveValue = true
-        dialogModel.value = false
+    const { data, resolve, reject } = useDialogEntry<ConfirmDialogProps, boolean>()
+
+    const confirmCta = useDialogCta(data.confirmCta, 'yes')
+    const rejectCta = useDialogCta(data.rejectCta, 'no')
+    const open = ref(true)
+    const buttonElements: Record<ButtonKey, HTMLElement | null> = { reject: null, confirm: null }
+    const highlightCta = computed(() => data.highlightCta ?? 'confirm')
+    const ctaColor = computed(() => data.level ?? 'primary')
+    const componentProps = computed(() => ('props' in data ? data.props : {}) as Record<string, unknown>)
+
+    const buttons = computed(() => {
+        const highlighted = highlightCta.value
+        const descriptors: ButtonDescriptor[] = [
+            {
+                key: 'reject',
+                cta: rejectCta,
+                variant: highlighted === 'reject' ? 'flat' : 'text',
+                color: highlighted === 'reject' ? ctaColor.value : undefined,
+                onClick: rejectDialog,
+            },
+            {
+                key: 'confirm',
+                cta: confirmCta,
+                variant: highlighted === 'confirm' ? 'flat' : 'text',
+                color: highlighted === 'confirm' ? ctaColor.value : undefined,
+                onClick: confirmDialog,
+            },
+        ]
+        return highlighted === 'reject' ? descriptors.reverse() : descriptors
+    })
+
+    let confirmed = false
+
+    function setButton(key: ButtonKey, element: Element | ComponentPublicInstance | null): void {
+        if (element && '$el' in element) {
+            buttonElements[key] = element.$el as HTMLElement
+        } else {
+            buttonElements[key] = null
+        }
     }
 
-    function resolveDialog(): void {
-        if (props.data.throwOnReject && !resolveValue) {
-            emit('reject')
+    function rejectDialog(): void {
+        if (!open.value) {
             return
         }
-        emit('resolve', resolveValue)
+        confirmed = false
+        open.value = false
+    }
+
+    function confirmDialog(): void {
+        if (!open.value) {
+            return
+        }
+        confirmed = true
+        open.value = false
+    }
+
+    function focusInitial(): void {
+        buttonElements[data.level === ConfirmDialogLevel.DANGER ? 'reject' : 'confirm']?.focus()
+    }
+
+    function settle(): void {
+        if (!confirmed && data.throwOnReject) {
+            reject()
+            return
+        }
+        resolve(confirmed)
     }
 </script>
-
-<style lang="scss" scoped>
-@use "vuetify/settings";
-
-.confirm-dialog-card {
-    > :deep(.v-card-text) {
-        padding-left: settings.$spacer * 4 !important;
-        padding-right: settings.$spacer * 4 !important;
-    }
-}
-</style>

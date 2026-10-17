@@ -1,110 +1,90 @@
 <template>
-    <VDialog
-        v-model="dialogModel"
-        :max-width="maxWidth"
-        :fullscreen="fullscreen"
-        :scrollable="data.size === PromptDialogSize.LARGE"
-        @after-leave="resolveDialog">
-        <VCard class="prompt-dialog-card">
-            <VToolbar color="primary">
-                <VToolbarTitle>
-                    <MaybeTranslation :translate="data.translateTitle" :content="data.title" />
-                </VToolbarTitle>
-                <VSpacer />
-                <div ref="toolbar" class="prompt-dialog-toolbar-slot" />
-                <VBtn icon="$close" :aria-label="closeLabel" @click="closeDialog" />
-            </VToolbar>
+    <DialogFrame
+        :model-value="open"
+        :title="data.title"
+        :translate-title="data.translateTitle"
+        :width="data.width ?? 'md'"
+        fullscreen-on-mobile
+        @close="closeDialog"
+        @opened="focusFirstInput"
+        @closed="settle">
+        <template #header>
+            <div ref="toolbar" class="ui-dialog__toolbar" />
+        </template>
+        <div ref="content" class="ui-dialog__content">
             <component
                 :is="data.component"
-                v-bind="createComponentProps()"
                 v-if="toolbar"
-                v-model="resolveValue"
+                v-bind="componentProps"
+                v-model="value"
                 :toolbar="toolbar" />
-            <VDivider />
-            <VCardActions>
-                <VSpacer />
-                <VBtn :color="ctaColor" @click="closeDialog">
-                    <MaybeTranslation :translate="abortCta.translateText" :content="abortCta.text" />
-                </VBtn>
-                <VBtn variant="elevated" :color="ctaColor" :disabled="isSaveDisabled" @click="saveDialog">
-                    <MaybeTranslation :translate="saveCta.translateText" :content="saveCta.text" />
-                </VBtn>
-            </VCardActions>
-        </VCard>
-    </VDialog>
+        </div>
+        <template #actions>
+            <VBtn variant="text" @click="closeDialog">
+                <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText" />
+            </VBtn>
+            <VBtn variant="flat" color="primary" :disabled="isSaveDisabled" @click="saveDialog">
+                <MaybeTranslation :content="saveCta.text" :translate="saveCta.translateText" />
+            </VBtn>
+        </template>
+    </DialogFrame>
 </template>
 
 <script lang="ts" setup generic="T, R extends boolean, C extends PromptDialogComponent<T> = PromptDialogComponent<T>">
-    import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle } from 'vuetify/components'
-    import { computed, ref, toValue } from 'vue'
-    import { useDisplay } from 'vuetify'
-    import type { PromptDialogComponent, PromptDialogProps } from '@/composables/dialog/presets/PromptDialogProps'
-    import { PromptDialogSize } from '@/composables/dialog/presets/PromptDialogProps'
+    import { computed, ref, toValue, useTemplateRef } from 'vue'
+    import { VBtn } from 'vuetify/components'
+    import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
-    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
+    import type { PromptDialogComponent, PromptDialogProps } from '@/composables/dialog/presets/PromptDialogProps'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
-    import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
+    import { useDialogEntry } from '@/composables/dialog/useDialogEntry'
     import { isEmptyValue } from '@/composables/dialog/internal/isEmptyValue'
 
-    const props = defineProps<{ data: PromptDialogProps<T, R> }>()
-    const emit = defineEmits<DialogComponentEmits<R extends true ? T : T | null>>()
+    const { data, resolve, reject } = useDialogEntry<PromptDialogProps<T, R>>()
 
-    const MAX_WIDTH_MAP: Record<PromptDialogSize, number> = {
-        [PromptDialogSize.SMALL]: 650,
-        [PromptDialogSize.LARGE]: 1200,
-    }
+    const saveCta = useDialogCta(data.saveCta, 'save')
+    const abortCta = useDialogCta(data.abortCta, 'cancel')
+    const open = ref(true)
+    const value = ref<T | null>(toValue(data.initialValue) ?? null)
+    const toolbar = useTemplateRef<HTMLDivElement>('toolbar')
+    const content = useTemplateRef<HTMLDivElement>('content')
+    const isSaveDisabled = computed(() => !!data.required && isEmptyValue(value.value))
+    const componentProps = computed(() => ('props' in data ? data.props : {}) as Record<string, unknown>)
 
-    const saveCta = useDialogCta(props.data.saveCta, 'save')
-    const abortCta = useDialogCta(props.data.abortCta, 'cancel')
-    const translate = useMaybeTranslation()
-    const closeCta = useDialogCta(undefined, 'close')
-    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
-
-    const dialogModel = ref(true)
-    const resolveValue = ref<T | null>(toValue(props.data.initialValue) ?? null)
-    const toolbar = ref<HTMLDivElement | null>(null)
-    const { mobile } = useDisplay()
-    const isSaveDisabled = computed(() => !!props.data.required && isEmptyValue(resolveValue.value))
-    const maxWidth = computed(() => MAX_WIDTH_MAP[props.data.size ?? PromptDialogSize.SMALL])
-    const fullscreen = computed(() => props.data.size === PromptDialogSize.LARGE ? mobile.value : false)
-    const ctaColor = computed(() => props.data.size === PromptDialogSize.LARGE ? 'secondary' : 'primary')
-
-    function createComponentProps(): object {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (props.data as any).props ?? {}
-    }
+    let saved = false
 
     function closeDialog(): void {
-        resolveValue.value = (toValue(props.data.initialValue) ?? null)
-        dialogModel.value = false
+        if (!open.value) {
+            return
+        }
+        saved = false
+        open.value = false
     }
 
     function saveDialog(): void {
-        dialogModel.value = false
-    }
-
-    function resolveDialog(): void {
-        if (props.data.required && isEmptyValue(resolveValue.value)) {
-            // TODO: pass error object
-            emit('reject')
+        if (!open.value) {
             return
         }
+        saved = true
+        open.value = false
+    }
 
-        emit('resolve', resolveValue.value)
+    function focusFirstInput(): void {
+        content.value?.querySelector<HTMLElement>('input:not([type=hidden]), textarea, select')?.focus()
+    }
+
+    function settle(): void {
+        const result = saved ? value.value : (toValue(data.initialValue) ?? null)
+        if (data.required && isEmptyValue(result)) {
+            reject()
+            return
+        }
+        resolve(result)
     }
 </script>
 
-<style lang="scss" scoped>
-@use "vuetify/settings";
-
-.prompt-dialog-card {
-    > :deep(.v-card-item) {
-        padding-left: settings.$spacer * 4 !important;
-        padding-right: settings.$spacer * 4 !important;
-    }
-}
-
-.prompt-dialog-toolbar-slot {
+<style lang="scss">
+.ui-dialog__toolbar {
     display: contents;
 }
 </style>

@@ -1,14 +1,11 @@
-import InfoDialog from '@/composables/dialog/components/dialog/presets/InfoDialog.vue'
-import PromptDialog from '@/composables/dialog/components/dialog/presets/PromptDialog.vue'
-import ConfirmDialog from '@/composables/dialog/components/dialog/presets/ConfirmDialog.vue'
+import type { Component } from 'vue'
 import { useDialogQueue } from '@/composables/dialog/internal/useDialogQueue'
+import { usePluginContext } from '@/plugin/composables/usePluginContext'
 import type { ConfirmDialogLevel, ConfirmDialogProps } from '@/composables/dialog/presets/ConfirmDialogProps'
 import type { PromptDialogComponent, PromptDialogProps } from '@/composables/dialog/presets/PromptDialogProps'
 import type { InfoDialogProps } from '@/composables/dialog/presets/InfoDialogProps'
-import type { CreateDialogQueueEntry } from '@/composables/dialog/types/DialogQueueEntry'
-import type { Component } from 'vue'
 import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
-import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialog.vue'
+import type { CreateDialogQueueEntry } from '@/composables/dialog/types/DialogQueueEntry'
 
 /* eslint-disable @typescript-eslint/no-invalid-void-type */
 
@@ -29,34 +26,29 @@ export interface DialogComposable {
         R,
         T = R,
         RejectOnEmpty extends boolean = false,
-    >(options: FormDialogProps<R, T, RejectOnEmpty>): Promise<RejectOnEmpty extends true ? R : R | null>
+        C extends Component = Component,
+    >(options: FormDialogProps<R, T, RejectOnEmpty, C>): Promise<RejectOnEmpty extends true ? R : R | null>
 }
 
 export function useDialog(): DialogComposable {
     const dialogQueue = useDialogQueue()
+    const { options: { components: { dialog: components } } } = usePluginContext()
 
     function createInfoDialog(title: string, content: string): Promise<null>
     function createInfoDialog<T = void>(data: InfoDialogProps<T>): Promise<T extends void ? null : (T | null)>
     function createInfoDialog<T = void>(titleOrData: InfoDialogProps<T> | string, content?: string): Promise<T | null> {
-        let data: InfoDialogProps<T>
-        if (typeof titleOrData === 'string') {
-            data = {
-                title: titleOrData,
-                content: content ?? '',
-            }
-        } else {
-            data = titleOrData
-        }
+        const data: InfoDialogProps<T> = typeof titleOrData === 'string'
+            ? { title: titleOrData, content: content ?? '' }
+            : titleOrData
 
         return new Promise<T | null>((resolve) => {
-            const dialogEntry: CreateDialogQueueEntry<T extends void ? null : T | null, typeof InfoDialog<T>> = {
-                component: InfoDialog,
-                props: { data },
+            const entry: CreateDialogQueueEntry<T | null, InfoDialogProps<T>> = {
+                component: components.info,
+                data,
                 resolve,
                 reject: () => { resolve(null) },
             }
-
-            dialogQueue.addToQueue(dialogEntry)
+            dialogQueue.addToQueue(entry)
         })
     }
 
@@ -64,17 +56,15 @@ export function useDialog(): DialogComposable {
         T,
         R extends boolean = false,
         C extends PromptDialogComponent<T> = PromptDialogComponent<T>,
-    >(
-        options: PromptDialogProps<T, R, C>,
-    ): Promise<R extends true ? T : T | null> {
+    >(options: PromptDialogProps<T, R, C>): Promise<R extends true ? T : T | null> {
         return new Promise<R extends true ? T : T | null>((resolve, reject) => {
-            const dialogEntry: CreateDialogQueueEntry<R extends true ? T : T | null, typeof PromptDialog<T, R>> = {
-                component: PromptDialog,
-                props: { data: options },
+            const entry: CreateDialogQueueEntry<R extends true ? T : T | null, PromptDialogProps<T, R, C>> = {
+                component: components.prompt,
+                data: options,
                 resolve,
                 reject,
             }
-            dialogQueue.addToQueue(dialogEntry)
+            dialogQueue.addToQueue(entry)
         })
     }
 
@@ -85,22 +75,17 @@ export function useDialog(): DialogComposable {
         content?: string,
         level?: ConfirmDialogLevel,
     ): Promise<boolean> {
-        let options: ConfirmDialogProps<C> = titleOrOptions as ConfirmDialogProps<C>
-        if (typeof titleOrOptions === 'string' && typeof content === 'string') {
-            options = {
-                title: titleOrOptions,
-                content,
-                level,
-            }
-        }
+        const options: ConfirmDialogProps<C> = typeof titleOrOptions === 'string'
+            ? { title: titleOrOptions, content: content ?? '', level }
+            : titleOrOptions
         return new Promise<boolean>((resolve, reject) => {
-            const dialogEntry: CreateDialogQueueEntry<boolean> = {
-                component: ConfirmDialog,
-                props: { data: options },
+            const entry: CreateDialogQueueEntry<boolean, ConfirmDialogProps<C>> = {
+                component: components.confirm,
+                data: options,
                 resolve,
                 reject,
             }
-            dialogQueue.addToQueue(dialogEntry)
+            dialogQueue.addToQueue(entry)
         })
     }
 
@@ -108,15 +93,16 @@ export function useDialog(): DialogComposable {
         R,
         T = R,
         RejectOnEmpty extends boolean = false,
-    >(options: FormDialogProps<R, T, RejectOnEmpty>): Promise<RejectOnEmpty extends true ? R : R | null> {
+        C extends Component = Component,
+    >(options: FormDialogProps<R, T, RejectOnEmpty, C>): Promise<RejectOnEmpty extends true ? R : R | null> {
         return new Promise<RejectOnEmpty extends true ? R : R | null>((resolve, reject) => {
-            const dialogEntry: CreateDialogQueueEntry<RejectOnEmpty extends true ? R : R | null> = {
-                component: FormDialog,
-                props: { data: options },
+            const entry: CreateDialogQueueEntry<RejectOnEmpty extends true ? R : R | null, FormDialogProps<R, T, RejectOnEmpty, C>> = {
+                component: components.form,
+                data: options,
                 resolve,
                 reject,
             }
-            dialogQueue.addToQueue(dialogEntry)
+            dialogQueue.addToQueue(entry)
         })
     }
 

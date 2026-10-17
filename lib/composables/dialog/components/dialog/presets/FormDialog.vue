@@ -1,97 +1,129 @@
 <template>
-    <VDialog v-model="dialogModel" max-width="1200" scrollable @after-leave="resolveDialog">
-        <VCard>
-            <VToolbar color="primary">
-                <VToolbarTitle>
-                    <MaybeTranslation :content="data.title" :translate="data.translateTitle" />
-                </VToolbarTitle>
-                <VSpacer />
-                <VBtn icon="$close" :aria-label="closeLabel" @click="closeDialog" />
-            </VToolbar>
-            <VDefaultsProvider :defaults="componentDefaults">
-                <component :is="data.component" ref="formComponent" v-bind="createComponentProps()" @save="finish" />
-            </VDefaultsProvider>
-            <VDivider />
-            <VCardActions>
-                <VSpacer />
-                <VBtn color="primary" @click="closeDialog">
-                    <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText" />
-                </VBtn>
-                <VBtn variant="elevated" color="primary" @click="finish">
-                    <MaybeTranslation :translate="saveCta.translateText" :content="saveCta.text" />
-                </VBtn>
-            </VCardActions>
-        </VCard>
-    </VDialog>
+    <DialogFrame
+        :model-value="open"
+        :title="data.title"
+        :translate-title="data.translateTitle"
+        :width="data.width ?? 'md'"
+        :persistent="loading || submitting"
+        fullscreen-on-mobile
+        form
+        @close="closeDialog"
+        @submit="submit"
+        @opened="focusFirstInput"
+        @closed="settle">
+        <VAlert
+            v-if="error !== null"
+            type="error"
+            variant="tonal"
+            density="compact"
+            :icon="Icons.error"
+            :title="saveFailedTitle"
+            :text="error" />
+        <div ref="content" class="ui-dialog__content">
+            <component :is="data.component" v-bind="componentProps" />
+        </div>
+        <template #actions>
+            <VBtn variant="text" :disabled="loading" @click="closeDialog">
+                <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText" />
+            </VBtn>
+            <VBtn variant="flat" color="primary" type="submit" :loading="loading">
+                <MaybeTranslation :content="saveCta.text" :translate="saveCta.translateText" />
+            </VBtn>
+        </template>
+    </DialogFrame>
 </template>
 
-<script setup lang="ts" generic="R, T = R, C extends FormDialogComponent<T> = FormDialogComponent<T>">
-    import { VBtn, VCard, VCardActions, VDialog, VDivider, VSpacer, VToolbar, VToolbarTitle, VDefaultsProvider } from 'vuetify/components'
-    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
-    import type { FormDialogComponent, FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
-    import { computed, ref, useTemplateRef } from 'vue'
-    import type { DialogComponentEmits } from '@/composables/dialog/types/DialogComponent'
+<script lang="ts" setup generic="R, T = R, C extends Component = Component">
+    import { type Component, computed, provide, ref, useTemplateRef } from 'vue'
+    import { VAlert, VBtn } from 'vuetify/components'
     import useVuelidate from '@vuelidate/core'
-    import { useLoading } from '@/composables/loading/useLoading'
+    import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
+    import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
+    import type { DialogFormFinish } from '@/composables/dialog/types/DialogFormContext'
+    import { DIALOG_FORM_INJECTION_KEY } from '@/composables/dialog/constants/injectionKeys'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
+    import { useDialogEntry } from '@/composables/dialog/useDialogEntry'
+    import { useLoading } from '@/composables/loading/useLoading'
     import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
+    import { usePluginContext } from '@/plugin/composables/usePluginContext'
+    import { Errors } from '@/plugin/constants/errors'
+    import { Icons } from '@/internal/icons'
+    import { toErrorMessage } from '@/internal/toErrorMessage'
 
-    const props = defineProps<{ data: FormDialogProps<R, T, boolean, C> }>()
-    const emit = defineEmits<DialogComponentEmits<R | null>>()
-
-    const saveCta = useDialogCta(props.data.saveCta, 'save')
-    const abortCta = useDialogCta(props.data.abortCta, 'cancel')
+    const { data, resolve, reject } = useDialogEntry<FormDialogProps<R, T, boolean>>()
+    const { options } = usePluginContext()
     const translate = useMaybeTranslation()
-    const closeCta = useDialogCta(undefined, 'close')
-    const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
-
-    const formComponent = useTemplateRef<InstanceType<FormDialogComponent<T>>>('formComponent')
-    const dialogModel = ref(true)
+    const saveCta = useDialogCta(data.saveCta, 'save')
+    const abortCta = useDialogCta(data.abortCta, 'cancel')
+    const saveFailedTitle = computed(() => translate(options.i18n.messages.saveFailed, true))
+    const unknownErrorText = computed(() => translate(options.i18n.messages.unknownError, true))
+    const open = ref(true)
+    const error = ref<string | null>(null)
+    const content = useTemplateRef<HTMLDivElement>('content')
     const v = useVuelidate()
     const { loading, action } = useLoading(performAction)
-    const componentDefaults = computed(() => ({
-        global: {
-            disabled: loading.value,
+    const componentProps = computed(() => ('props' in data ? data.props : {}) as Record<string, unknown>)
+
+    let finish: DialogFormFinish<T> | null = null
+    let resolveValue: unknown = null
+    const submitting = ref<boolean>(false)
+
+    provide(DIALOG_FORM_INJECTION_KEY, {
+        register(handler: DialogFormFinish<T>) {
+            finish = handler
         },
-    }))
+        submit,
+        loading,
+    })
 
-    let resolveValue: R | null = null
-
-    function createComponentProps(): object {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (props.data as any).props ?? {}
-    }
-
-    async function finish() {
-        if (!await v.value.$validate()) {
+    async function submit(): Promise<void> {
+        if (loading.value || submitting.value) {
             return
         }
-        await action()
+        if (!finish) {
+            throw new Error(Errors.DIALOG_FORM_NOT_REGISTERED)
+        }
+        submitting.value = true
+        try {
+            if (!await v.value.$validate() || !open.value) {
+                return
+            }
+            error.value = null
+            await action()
+        } catch (caught) {
+            error.value = toErrorMessage(caught, unknownErrorText.value)
+        } finally {
+            submitting.value = false
+        }
     }
 
-    async function performAction() {
-        if (!formComponent.value) {
-            throw new Error('Form component not mounted')
+    async function performAction(): Promise<void> {
+        if (!finish) {
+            throw new Error(Errors.DIALOG_FORM_NOT_REGISTERED)
         }
-        const result: T = await formComponent.value.finish()
-        if (typeof props.data.action === 'function') {
-            resolveValue = await props.data.action(result)
-        } else {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-            resolveValue = result as unknown as R
-        }
-        resolveDialog()
+        const result = await finish()
+        const value: unknown = data.action ? await data.action(result) : result
+        resolveValue = value
+        open.value = false
     }
 
     function closeDialog(): void {
-        dialogModel.value = false
-    }
-
-    function resolveDialog() {
-        if (props.data.rejectOnEmpty && resolveValue === null) {
-            emit('reject')
+        if (loading.value || submitting.value) {
             return
         }
-        emit('resolve', resolveValue)
+        open.value = false
+    }
+
+    function focusFirstInput(): void {
+        content.value?.querySelector<HTMLElement>('input:not([type=hidden]), textarea, select')?.focus()
+    }
+
+    function settle(): void {
+        if (data.rejectOnEmpty && resolveValue === null) {
+            reject()
+            return
+        }
+        resolve(resolveValue)
     }
 </script>
