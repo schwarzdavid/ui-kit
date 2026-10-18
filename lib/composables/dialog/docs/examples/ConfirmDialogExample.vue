@@ -52,7 +52,7 @@
         lastChoice.value = await dialog.confirm({
             title: 'Delete user Lisa Schneider?',
             translateTitle: false,
-            content: 'Lisa Schneider loses access immediately and is removed from 2 projects. This can\'t be undone. The dialog is permanent, so Escape does nothing.',
+            content: 'Lisa Schneider loses access immediately and is removed from 2 projects. This can\'t be undone. The dialog is permanent, so Escape and overlay clicks do nothing.',
             translateContent: false,
             level: ConfirmDialogLevel.DANGER,
             permanent: true,

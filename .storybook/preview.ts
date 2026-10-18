@@ -3,6 +3,7 @@ import { withVuetify } from './vuetify/withVuetify.decorator'
 import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import 'vuetify/styles'
+import './vuetify/known-gaps.css'
 import '@fontsource/noto-sans/400.css'
 import '@fontsource/noto-sans/500.css'
 import '@fontsource/noto-sans/600.css'
@@ -11,6 +12,7 @@ import '@fontsource/jetbrains-mono/500.css'
 import enMessages from './i18n/en.json'
 import { createUIKit } from '@/plugin/createUIKit'
 import { createVuetifyOptions } from '@/vuetify'
+import { CodeBlock } from './docs/CodeBlock'
 
 setup((app) => {
     app.use(createVuetify(createVuetifyOptions()))
@@ -24,6 +26,11 @@ const preview: Preview = {
     decorators,
 
     parameters: {
+        docs: {
+            components: {
+                code: CodeBlock,
+            },
+        },
         backgrounds: {
             options: {
                 light: {

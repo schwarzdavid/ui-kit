@@ -55,6 +55,22 @@ describe('createVuetifyOptions', () => {
         expect(icons.aliases?.close).toMatch(/^svg:/)
     })
 
+    it('marks the active list item with primary-container and keeps its text and checkbox in ink', () => {
+        expect(defaults.VList).toMatchObject({ color: 'ink', activeClass: 'bg-primary-container' })
+        expect(defaults.VListItem).toMatchObject({ color: 'ink', activeClass: 'bg-primary-container' })
+        expect(defaults.VSelect).toMatchObject({ itemColor: 'ink' })
+        expect(defaults.VAutocomplete).toMatchObject({ itemColor: 'ink' })
+        expect(defaults.VCombobox).toMatchObject({ itemColor: 'ink' })
+    })
+
+    it('styles button groups like secondary buttons, flattens expansion panels, colours both switch states, draws dividers in border and keeps progress tracks translucent', () => {
+        expect(defaults.VBtnGroup).toMatchObject({ variant: 'text', color: 'ink', border: 'thin border-strong', divided: true })
+        expect(defaults.VExpansionPanels).toMatchObject({ flat: true, class: 'border' })
+        expect(defaults.VSwitch).toMatchObject({ color: 'ink', baseColor: 'border-strong' })
+        expect(defaults.VDivider).toEqual({ color: 'border' })
+        expect(defaults.VProgressLinear).toEqual({ bgOpacity: 0.12, bufferOpacity: 0.12 })
+    })
+
     it('never sets a global VBtn border default', () => {
         expect(defaults.VBtn).not.toHaveProperty('border')
     })

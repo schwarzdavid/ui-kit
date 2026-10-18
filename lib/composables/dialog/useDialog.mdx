@@ -1,22 +1,67 @@
 import { Meta, Story } from '@storybook/addon-docs/blocks'
 import * as InfoDialogStories from './docs/stories/InfoDialog.stories.ts'
-import * as PromptDialogStories from './docs/stories/PromptDialog.stories.ts'
 import * as ConfirmDialogStories from './docs/stories/ConfirmDialog.stories.ts'
 import * as FormDialogStories from './docs/stories/FormDialog.stories.ts'
+import * as FormDialogMoveStories from './docs/stories/FormDialogMove.stories.ts'
+import * as FormDialogInviteStories from './docs/stories/FormDialogInvite.stories.ts'
+import * as FormDialogTagsStories from './docs/stories/FormDialogTags.stories.ts'
+import * as DialogStackingStories from './docs/stories/DialogStacking.stories.ts'
+import * as DialogPresetsStories from './docs/stories/DialogPresets.stories.ts'
 
 <Meta title="composables/useDialog" />
 
 # useDialog
 
-Dialog util composable to functionally create dialogs. Every method returns a Promise that settles when the dialog is closed.
+Open dialogs from script instead of declaring them in templates. Every method pushes a dialog into a queue and returns a Promise that settles when the dialog closes, so the calling code reads top to bottom:
 
-## General Usage
+```ts
+const dialog = useDialog()
+
+if (await dialog.confirm('items.delete.title', 'items.delete.content', ConfirmDialogLevel.DANGER)) {
+    await api.deleteItem(id)
+}
+```
 
 The dialogs are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet.
 
-## Layout
+## Choosing a dialog
 
-Every dialog shares one shell: a title, a scrolling body and a footer with the buttons in the order tertiary, then primary. Three widths exist, `sm` (440px), `md` (560px) and `lg` (720px); every method accepts a `width` option of type `DialogWidth` (`'sm' | 'md' | 'lg' | number`). Prompt and form dialogs go full screen below Vuetify's `sm` breakpoint. Escape behaves like the cancel button, a click on the backdrop does nothing.
+<table>
+    <thead>
+    <tr>
+        <th>Method</th>
+        <th>Use it for</th>
+        <th>Resolves with</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>[`info()`](#dialogcomposableinfo)</td>
+        <td>Showing information, optionally with a few custom buttons for a simple choice</td>
+        <td>`null`, or the `value` of the clicked custom button</td>
+    </tr>
+    <tr>
+        <td>[`confirm()`](#dialogcomposableconfirm)</td>
+        <td>Asking for a yes/no decision before something happens, from harmless to destructive</td>
+        <td>`true` or `false` (or rejects with `throwOnReject`)</td>
+    </tr>
+    <tr>
+        <td>[`form()`](#dialogcomposableform)</td>
+        <td>Getting a value from the user: a single field, a picker, a validated form, optionally saved by an async action before closing</td>
+        <td>The value of your component or the result of `action`; `null` when cancelled (or rejects with `required`)</td>
+    </tr>
+    </tbody>
+</table>
+
+Each method is rendered by a preset component that you can [replace](#replacing-the-dialog-components) with your own.
+
+## Layout and behaviour
+
+Every dialog shares one shell: a title, a scrolling body and a footer with the buttons in the order tertiary, then primary. Three widths exist, `sm` (440px), `md` (560px) and `lg` (720px); every method accepts a `width` option of type `DialogWidth` (`'sm' | 'md' | 'lg' | number`). Form dialogs go full screen below Vuetify's `sm` breakpoint. Escape and a click on the overlay behave like the cancel button; set the plugin option `dialog.closeOnOverlayClick` to `false` to keep dialogs open on overlay clicks (see [Configuration](?path=/docs/configuration--docs)).
+
+All queued dialogs are rendered at once, the newest on top. A dialog can therefore open another one, e.g. a confirm from an `additionalCta` action of an info dialog or from the `action` of a form dialog, and the first one stays open underneath until it is closed itself.
+
+<Story of={DialogStackingStories.Default} />
 
 ## DialogComposable::info()
 
@@ -161,10 +206,10 @@ An additional CTA either resolves the dialog with a `value` or runs an `action` 
 ```vue
 <template>
     <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openTextDialog">Text content</VBtn>
-        <VBtn color="primary" @click="openComponentDialog">Component content</VBtn>
-        <VBtn color="primary" @click="openAdditionalCtaDialog">Additional actions</VBtn>
-        <VBtn color="primary" @click="openChoiceCtaDialog">Simple Choice</VBtn>
+        <VBtn variant="flat" color="primary" @click="openTextDialog">Text content</VBtn>
+        <VBtn @click="openComponentDialog">Component content</VBtn>
+        <VBtn @click="openAdditionalCtaDialog">Additional actions</VBtn>
+        <VBtn @click="openChoiceCtaDialog">Simple Choice</VBtn>
     </div>
     <p v-if="actionCount" class="mt-4">Action triggered {{ actionCount }} times</p>
     <p v-if="pill" class="mt-4">You chose: {{ pill }}</p>
@@ -224,168 +269,6 @@ An additional CTA either resolves the dialog with a `value` or runs an `action` 
                     value: 'Blue Pill',
                 },
             ],
-        })
-    }
-</script>
-```
-
-## DialogComposable::prompt()
-
-Prompt dialogs are meant to let users choose an option from a custom component (with a custom logic). For example to rename a translated text field, change the location of a folder, ...<br/>
-Also more complex applications are possible, e.g. material selection with custom filters and so on.
-
-### Demo
-<Story of={PromptDialogStories.Default} />
-
-### Usage
-
-`dialog.prompt<T, R extends boolean>(options: PromptDialogProps<T, R>): Promise<R extends true ? T : T | null>`
-
-**PromptDialogProps&lt;T, R extends boolean&gt;**
-<table>
-    <thead>
-    <tr>
-        <th>Property</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default Value</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>title *</td>
-        <td>string</td>
-        <td>The title of the dialog</td>
-        <td>---</td>
-    </tr>
-    <tr>
-        <td>translateTitle</td>
-        <td>boolean</td>
-        <td>If the title should be translated</td>
-        <td>`true`</td>
-    </tr>
-    <tr>
-        <td>saveCta</td>
-        <td>Partial&lt;DialogCta&gt;</td>
-        <td>Customize the save button. The default text comes from the plugin option `i18n.messages.save`.</td>
-        <td>
-            ```ts
-            {
-                text: 'action.save',
-                translateText: true
-            }
-            ```
-        </td>
-    </tr>
-    <tr>
-        <td>abortCta</td>
-        <td>Partial&lt;DialogCta&gt;</td>
-        <td>Customize the abort button. The default text comes from the plugin option `i18n.messages.cancel`.</td>
-        <td>
-            ```ts
-            {
-                text: 'action.cancel',
-                translateText: true
-            }
-            ```
-        </td>
-    </tr>
-    <tr>
-        <td>initialValue</td>
-        <td>MaybeRefOrGetter&lt;T&gt;</td>
-        <td>The initial value which should be used to pass as modelValue to your component</td>
-        <td>---</td>
-    </tr>
-    <tr>
-        <td>width</td>
-        <td>DialogWidth</td>
-        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. Prompt dialogs always go full screen on phones.</td>
-        <td>`'md'`</td>
-    </tr>
-    <tr>
-        <td>required</td>
-        <td>R</td>
-        <td>Define whether the modelValue is required or not. When `true`, the save button is disabled while the value is empty and closing the dialog without a value rejects the Promise.</td>
-        <td>`false`</td>
-    </tr>
-    <tr>
-        <td>component *</td>
-        <td>Component&lt;\{modelValue: T, toolbar: HTMLElement\}&gt;</td>
-        <td>A Vue component to render inside the dialog. The component must define a model of type `T` and also accept a prop `toolbar` which is the HTMLElement of the toolbar. You can use it to add elements to the toolbar with the &lt;teleport&gt; component.</td>
-        <td>---</td>
-    </tr>
-    <tr>
-        <td>props (*)</td>
-        <td>ComponentProps&lt;component&gt;</td>
-        <td>Props for the component, without `modelValue` and `toolbar`. Required when the component declares a required prop, optional otherwise.</td>
-        <td>---</td>
-    </tr>
-    </tbody>
-</table>
-
-Note: Properties with * are required
-
-**DialogCta**
-<table>
-    <thead>
-    <tr>
-        <th>Property</th>
-        <th>Type</th>
-        <th>Description</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>text</td>
-        <td>string</td>
-        <td>The text which should be shown in the CTA</td>
-    </tr>
-    <tr>
-        <td>translateText</td>
-        <td>boolean</td>
-        <td>If the text should be translated or not</td>
-    </tr>
-    </tbody>
-</table>
-
-### Example implementation
-
-```vue
-<template>
-    <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openPromptDialog">Translated Input</VBtn>
-        <VBtn color="primary" @click="openLargePromptDialog">Complex Prompt</VBtn>
-    </div>
-    <p v-if="result" class="mt-4">Last prompt value: {{ result }}</p>
-</template>
-
-<script lang="ts" setup>
-    import { ref } from 'vue'
-    import { useDialog } from '@schwarzdavid/ui-kit'
-    import PromptDialogContent from './PromptDialogContent.vue'
-    import PromptDialogLargeContent from './PromptDialogLargeContent.vue'
-
-    const dialog = useDialog()
-    const result = ref<unknown>(null)
-
-    async function openPromptDialog(): Promise<void> {
-        result.value = await dialog.prompt({
-            component: PromptDialogContent,
-            props: {
-                label: 'Example translated input',
-            },
-            initialValue: '',
-            title: 'Testprompt',
-            translateTitle: false,
-        })
-    }
-
-    async function openLargePromptDialog(): Promise<void> {
-        result.value = await dialog.prompt({
-            component: PromptDialogLargeContent,
-            title: 'Large prompt',
-            translateTitle: false,
-            width: 'lg',
         })
     }
 </script>
@@ -468,7 +351,7 @@ By calling this function, a confirm dialog will be created with your defined tit
     <tr>
         <td>permanent</td>
         <td>boolean</td>
-        <td>When set to true, Escape does nothing and the dialog stays open until the user presses the confirm or reject button.</td>
+        <td>When set to true, Escape and overlay clicks do nothing and the dialog stays open until the user presses the confirm or reject button.</td>
         <td>`false`</td>
     </tr>
     <tr>
@@ -549,10 +432,10 @@ The enum defining the seriousness of the confirm dialog
 ```vue
 <template>
     <div class="d-flex gc-4">
-        <VBtn color="primary" @click="openDefaultConfirmDialog">Default Confirm choice</VBtn>
-        <VBtn color="primary" @click="openWarningConfirmDialog">Warning choice</VBtn>
-        <VBtn color="primary" @click="openDangerousConfirmDialog">Dangerous choice</VBtn>
-        <VBtn color="primary" @click="openCustomConfirmDialog">Custom content</VBtn>
+        <VBtn variant="flat" color="primary" @click="openDefaultConfirmDialog">Default Confirm choice</VBtn>
+        <VBtn @click="openWarningConfirmDialog">Warning choice</VBtn>
+        <VBtn @click="openDangerousConfirmDialog">Dangerous choice</VBtn>
+        <VBtn @click="openCustomConfirmDialog">Custom content</VBtn>
     </div>
     <p v-if="lastChoice !== null" class="mt-4">Last confirm value: {{ lastChoice }}</p>
 </template>
@@ -604,30 +487,106 @@ The enum defining the seriousness of the confirm dialog
 
 ## DialogComposable::form()
 
-Form dialogs render a form component of your own inside a dialog with a cancel and a save button. They validate the form with Vuelidate, read the value from the component and optionally run an asynchronous action (e.g. an API call) before closing.
+Form dialogs render a component of your own inside a dialog with a cancel and a save button and resolve with the value it produces. This covers everything from a single input (rename a field, pick a folder) to a validated form or a complex picker with its own filters. The dialog validates with Vuelidate and optionally runs an asynchronous action (e.g. an API call) before closing.
 
 ### Demo
 <Story of={FormDialogStories.Default} />
 
 ### Usage
 
-`dialog.form<R, T = R, RejectOnEmpty extends boolean = false>(options: FormDialogProps<R, T, RejectOnEmpty>): Promise<RejectOnEmpty extends true ? R : R | null>`
+`dialog.form<T, R = T, Required extends boolean = false>(options: FormDialogProps<T, R, Required>): Promise<Required extends true ? R : R | null>`
 
-`T` is the value your form component produces and `R` is the value the Promise resolves with. Without an `action`, `R` equals `T`.
+`T` is the value your component produces and `R` is the value the Promise resolves with. Without an `action`, `R` equals `T`. `T` is inferred from `initialValue` or the parameter of `action`; otherwise pass it explicitly.
 
-Your form component registers a `finish` function with `useDialogForm(finish)`. The composable returns `submit()` and `loading`; it throws when the component is not rendered inside a form dialog. The dialog body is a `<form>`, so pressing Enter in a field submits as well.
+### How your component hands over its value
 
-When the user submits, the dialog:
+The dialog owns the frame, the buttons and the Promise; your component owns the content. There are two ways for the component to tell the dialog what to resolve with, and they can be combined:
 
-1. runs `useVuelidate().$validate()`, which validates every Vuelidate instance created inside your component. If the form is invalid, the dialog stays open.
-2. calls your `finish()` to get the value of type `T`.
-3. calls `action(value)` if provided and resolves with its result, otherwise resolves with the value from `finish()`.
+<table>
+    <thead>
+    <tr>
+        <th></th>
+        <th>v-model</th>
+        <th>`useDialogForm(finish)`</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>In your component</td>
+        <td>`const model = defineModel<T>()`</td>
+        <td>`useDialogForm(() => buildValue())`</td>
+    </tr>
+    <tr>
+        <td>Start value</td>
+        <td>`initialValue` arrives as `modelValue`</td>
+        <td>Your component sets up its own state (pass data through `props`)</td>
+    </tr>
+    <tr>
+        <td>Resolves with</td>
+        <td>The model value at the moment of saving</td>
+        <td>Whatever `finish()` returns; it may be async and may throw</td>
+    </tr>
+    <tr>
+        <td>Extras</td>
+        <td>`required: true` disables save while the value is empty</td>
+        <td>`submit()` to save from inside (e.g. on double-click) and `loading` to disable fields</td>
+    </tr>
+    <tr>
+        <td>Best for</td>
+        <td>Single fields and pickers whose value is the state</td>
+        <td>Forms with several fields, values that need mapping, async preparation</td>
+    </tr>
+    </tbody>
+</table>
 
-While `finish()` and `action` run, the submit button shows its loading state, cancel and the close icon are disabled and Escape is ignored. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If `finish()` or `action` throws, the dialog stays open and shows an error alert at the top of the body with the `saveFailed` message as title and the error's message as text (or the `unknownError` message when the thrown value carries none); the user's input is kept.
+When a component does both, `finish()` wins. That is the way to use a model for the start value and still call `submit()`, as the [folder picker](#picker-that-submits-on-double-click) does.
 
-When the user closes the dialog with the cancel button, the close icon or Escape, the Promise resolves with `null`. With `rejectOnEmpty: true` it rejects instead, and it also rejects when the result is `null`.
+**What the dialog passes to your component**
 
-**FormDialogProps&lt;R, T, RejectOnEmpty&gt;**
+<table>
+    <thead>
+    <tr>
+        <th>Prop</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Your `props`</td>
+        <td>ComponentProps&lt;component&gt;</td>
+        <td>Everything from the `props` option, typed against the component</td>
+    </tr>
+    <tr>
+        <td>modelValue / onUpdate:modelValue</td>
+        <td>T | null</td>
+        <td>Only when the component declares `modelValue` (which `defineModel()` does). Starts with `initialValue`, or `null` without one.</td>
+    </tr>
+    <tr>
+        <td>toolbar</td>
+        <td>HTMLElement</td>
+        <td>Only when the component declares it. An element in the dialog header next to the title; place buttons there with `<Teleport :to="toolbar">`.</td>
+    </tr>
+    </tbody>
+</table>
+
+Undeclared props are never passed, so nothing leaks onto your root element as an attribute. The types follow the same rules: `modelValue` and `toolbar` are left out of the `props` option, and a declared `modelValue` must match `T`, otherwise the call does not compile.
+
+**What happens on save**
+
+The save button, Enter in any field (the body is a `<form>`) and `submit()` all start the same sequence:
+
+1. `useVuelidate().$validate()` runs and collects every Vuelidate instance created inside your component. If anything is invalid, the dialog stays open and your fields show their errors.
+2. The value is taken from `finish()`, or from the model when no `finish` is registered.
+3. `action(value)` runs if provided; the dialog resolves with its result, otherwise with the value.
+
+While steps 2 and 3 run, the save button shows its loading state, cancel and the close icon are disabled and Escape is ignored. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If `finish()` or `action` throws, the dialog stays open and shows an error alert at the top of the body with the `saveFailed` message as title and the error's message as text (or the `unknownError` message when the thrown value carries none); the user's input is kept.
+
+**What happens on close**
+
+Cancel, the close icon and Escape resolve the Promise with `null`. With `required: true` they reject instead, so the awaited value is never `null`; the dialog also rejects when the saved result is `null`.
+
+**FormDialogProps&lt;T, R, Required&gt;**
 <table>
     <thead>
     <tr>
@@ -685,31 +644,60 @@ When the user closes the dialog with the cancel button, the close icon or Escape
     <tr>
         <td>component *</td>
         <td>Component</td>
-        <td>The form component. It must call `useDialogForm(finish)` with a function returning `T` (or a Promise of it).</td>
+        <td>The component to render. It either declares a model of type `T` or calls `useDialogForm(finish)` with a function returning `T` (or a Promise of it). It may declare a `toolbar: HTMLElement` prop to place elements in the dialog header with &lt;teleport&gt;.</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>props (*)</td>
+        <td>ComponentProps&lt;component&gt;</td>
+        <td>Props for the component, without `modelValue` and `toolbar`. Required when the component declares a required prop, optional otherwise.</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>initialValue</td>
+        <td>MaybeRefOrGetter&lt;T&gt;</td>
+        <td>The initial `modelValue` of a v-model component</td>
         <td>---</td>
     </tr>
     <tr>
         <td>action</td>
         <td>(value: T) =&gt; Promise&lt;R&gt;</td>
-        <td>Called with the value from `finish()` after successful validation. The dialog resolves with its result. Throw to keep the dialog open and show the error.</td>
+        <td>Called with the value after successful validation. The dialog resolves with its result. Throw to keep the dialog open and show the error.</td>
         <td>---</td>
     </tr>
     <tr>
-        <td>rejectOnEmpty</td>
-        <td>RejectOnEmpty extends boolean</td>
-        <td>Reject the Promise instead of resolving with `null` when the dialog is closed without a result.</td>
+        <td>required</td>
+        <td>Required extends boolean</td>
+        <td>Reject the Promise instead of resolving with `null` when the dialog is closed without a result. For a v-model component without `finish`, the save button is disabled while the model value is empty.</td>
         <td>`false`</td>
-    </tr>
-    <tr>
-        <td>props (*)</td>
-        <td>ComponentProps&lt;component&gt;</td>
-        <td>Props for the form component. Required when the component declares a required prop, optional otherwise.</td>
-        <td>---</td>
     </tr>
     </tbody>
 </table>
 
 Note: Properties with * are required
+
+**DialogCta**
+<table>
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>text</td>
+        <td>string</td>
+        <td>The text which should be shown in the CTA</td>
+    </tr>
+    <tr>
+        <td>translateText</td>
+        <td>boolean</td>
+        <td>If the text should be translated or not</td>
+    </tr>
+    </tbody>
+</table>
 
 **DialogFormContext** (returned by `useDialogForm`)
 <table>
@@ -734,9 +722,105 @@ Note: Properties with * are required
     </tbody>
 </table>
 
-### Example implementation
+### Examples
 
-The form component validates its state with Vuelidate and registers `finish`:
+#### Single field
+
+A single input only needs a model. The value type is inferred from `initialValue`, and with `required: true` the Promise resolves with a `string`, never `null`. Try "Rename" in the demo at the top of this section.
+
+```vue
+<template>
+    <VTextField v-model="model" :label="label" />
+</template>
+
+<script lang="ts" setup>
+    defineProps<{
+        label: string
+    }>()
+
+    const model = defineModel<string | null>({ required: true })
+</script>
+```
+
+```ts
+const name = await dialog.form({
+    title: 'Rename inbound form',
+    component: FormDialogFieldContent,
+    props: { label: 'Name' },
+    initialValue: 'Contact request',
+    required: true,
+})
+```
+
+#### Required list
+
+`required` treats empty arrays, empty objects, empty `Map`/`Set` and invalid dates as empty too, so save stays disabled until at least one label is chosen. Because cancelling rejects, wrap the call in `try/catch`.
+
+<Story of={FormDialogTagsStories.Default} />
+
+```vue
+<template>
+    <VCombobox v-model="model" :items="suggestions" label="Labels" multiple chips closable-chips />
+</template>
+
+<script lang="ts" setup>
+    defineProps<{
+        suggestions: string[]
+    }>()
+
+    const model = defineModel<string[] | null>({ required: true })
+</script>
+```
+
+```ts
+try {
+    labels.value = await dialog.form({
+        title: 'Edit labels',
+        component: FormDialogTagsContent,
+        props: { suggestions: ['customer', 'urgent', 'invoice'] },
+        initialValue: [...labels.value],
+        required: true,
+    })
+} catch {
+    return
+}
+```
+
+#### Picker that submits on double-click
+
+The model brings the start value in, `useDialogForm` adds `submit()` and a Vuelidate rule blocks saving without a selection. Since `finish` is registered, it decides the result.
+
+<Story of={FormDialogMoveStories.Default} />
+
+```vue
+<template>
+    <VList v-model:selected="selected" :items="folders" item-title="name" item-value="id" mandatory @dblclick="submit" />
+    <p v-if="v.model.$error" class="text-error">Choose a folder.</p>
+</template>
+
+<script lang="ts" setup>
+    import { computed } from 'vue'
+    import useVuelidate from '@vuelidate/core'
+    import { useDialogForm } from '@schwarzdavid/ui-kit'
+    import { required } from '@schwarzdavid/ui-kit/validators'
+
+    defineProps<{
+        folders: Folder[]
+    }>()
+
+    const model = defineModel<string | null>({ required: true })
+    const selected = computed({
+        get: () => model.value === null ? [] : [model.value],
+        set: (value: string[]) => { model.value = value[0] ?? null },
+    })
+    const v = useVuelidate({ model: { required } }, { model })
+    const { submit } = useDialogForm(() => model.value)
+</script>
+```
+
+#### Validated form
+
+A form with several fields keeps its own state and hands over the value through `finish`. Try "New profile" in the demo at the top of this section.
 
 ```vue
 <template>
@@ -769,38 +853,164 @@ The form component validates its state with Vuelidate and registers `finish`:
 </script>
 ```
 
-The calling component opens the dialog and stores the result:
+```ts
+const name = await dialog.form<string>({
+    title: 'New profile',
+    component: FormDialogContent,
+})
+```
+
+#### Saving with an action
+
+Pass an `action` to persist the value before the dialog closes. The Promise resolves with the action's result, so `T` (the form value) and `R` (the saved entity) differ. A thrown error stays inside the dialog and the user can correct the input; use an address containing "taken" to see it. The `loading` ref from `useDialogForm` disables the field while saving.
+
+<Story of={FormDialogInviteStories.Default} />
 
 ```vue
 <template>
-    <VBtn variant="flat" color="primary" @click="openFormDialog">New profile</VBtn>
-    <p v-if="result !== null" class="mt-4">Saved name: {{ result }}</p>
+    <VTextField v-model="v.email.$model" label="Email address" type="email" :error="v.email.$error" :disabled="loading" />
 </template>
 
 <script lang="ts" setup>
     import { ref } from 'vue'
-    import { useDialog } from '@schwarzdavid/ui-kit'
-    import FormDialogContent from './FormDialogContent.vue'
+    import useVuelidate from '@vuelidate/core'
+    import { useDialogForm } from '@schwarzdavid/ui-kit'
+    import { email, required } from '@schwarzdavid/ui-kit/validators'
 
-    const dialog = useDialog()
-    const result = ref<string | null>(null)
+    const state = ref({ email: '' })
+    const v = useVuelidate({ email: { required, email } }, state)
+    const { loading } = useDialogForm(() => state.value.email.trim())
+</script>
+```
 
-    async function openFormDialog(): Promise<void> {
-        result.value = await dialog.form<string>({
-            title: 'New profile',
-            translateTitle: false,
-            component: FormDialogContent,
-        })
+```ts
+const invitation = await dialog.form({
+    title: 'Invite member',
+    component: FormDialogInviteContent,
+    action: (address: string) => api.sendInvitation(address),
+})
+```
+
+#### Large picker with a toolbar
+
+A component that declares `toolbar` can teleport elements into the dialog header, e.g. a filter button on small screens. Try "Choose a template" in the demo at the top of this section and shrink the window.
+
+```vue
+<template>
+    <TemplateList v-model="model" />
+    <Teleport v-if="mobile" :to="toolbar">
+        <VBtn :icon="filterIcon" variant="text" aria-label="Filters" />
+    </Teleport>
+</template>
+
+<script lang="ts" setup>
+    import { useDisplay } from 'vuetify'
+
+    defineProps<{
+        toolbar: HTMLElement
+    }>()
+
+    const model = defineModel<number>()
+    const { smAndDown: mobile } = useDisplay()
+</script>
+```
+
+```ts
+const template = await dialog.form<number>({
+    title: 'Choose a template',
+    component: FormDialogLargeContent,
+    width: 'lg',
+})
+```
+
+## Replacing the dialog components
+
+`info()`, `confirm()` and `form()` only queue an entry; what is rendered comes from the plugin options. Replace a preset when your application needs a different template, for example a bottom sheet instead of a centred dialog:
+
+```ts
+app.use(createUIKit({
+    components: {
+        dialog: {
+            confirm: BottomSheetConfirm,
+        },
+    },
+}))
+```
+
+The demo opens the same `dialog.confirm()` call once with the built-in preset and once inside a scope where `confirm` is replaced by a bottom sheet:
+
+<Story of={DialogPresetsStories.Default} />
+
+<table>
+    <thead>
+    <tr>
+        <th>Option</th>
+        <th>Renders</th>
+        <th>`data` of `useDialogEntry()`</th>
+        <th>Resolve with</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>`components.dialog.info`</td>
+        <td>`dialog.info()`</td>
+        <td>`InfoDialogProps<T>`</td>
+        <td>`null` or the `value` of a custom button; the composable turns a reject into `null`</td>
+    </tr>
+    <tr>
+        <td>`components.dialog.confirm`</td>
+        <td>`dialog.confirm()`</td>
+        <td>`ConfirmDialogProps`</td>
+        <td>`true` / `false`; reject when `throwOnReject` is set and the user declines</td>
+    </tr>
+    <tr>
+        <td>`components.dialog.form`</td>
+        <td>`dialog.form()`</td>
+        <td>`FormDialogProps<T, R, Required>`</td>
+        <td>The value or the `action` result, `null` on close; reject when `required` is set and there is no result</td>
+    </tr>
+    </tbody>
+</table>
+
+A preset receives no props and emits nothing. It reads the caller's options through `useDialogEntry()`, renders them however it likes and settles the caller's Promise:
+
+```vue
+<template>
+    <VBottomSheet :model-value="open" @update:model-value="() => close(false)" @after-leave="settle">
+        <VSheet class="pa-6">
+            <h2>{{ data.title }}</h2>
+            <p v-if="'content' in data">{{ data.content }}</p>
+            <VBtn variant="text" @click="() => close(false)">No</VBtn>
+            <VBtn variant="flat" color="primary" @click="() => close(true)">Yes</VBtn>
+        </VSheet>
+    </VBottomSheet>
+</template>
+
+<script lang="ts" setup>
+    import { ref } from 'vue'
+    import { useDialogEntry, type ConfirmDialogProps } from '@schwarzdavid/ui-kit'
+
+    const { data, resolve } = useDialogEntry<ConfirmDialogProps, boolean>()
+    const open = ref(true)
+
+    let confirmed = false
+
+    function close(value: boolean): void {
+        confirmed = value
+        open.value = false
+    }
+
+    function settle(): void {
+        resolve(confirmed)
     }
 </script>
 ```
 
-To persist the value before the dialog closes, pass an `action`. The dialog then resolves with the action's result, and a thrown error stays inside the dialog:
+Things to keep in mind:
 
-```ts
-const profile = await dialog.form<Profile, string>({
-    title: 'profile.create',
-    component: FormDialogContent,
-    action: name => api.createProfile({ name }),
-})
-```
+- A preset replaces the built-in one for the whole app; the keys you leave out keep their built-in presets. The callers do not change.
+- Call `resolve` or `reject` after the leave transition, so the dialog animates out before it is removed from the queue.
+- Honour the options your callers use, e.g. `translateTitle` (render user strings through vue-i18n), `width`, `permanent` or the CTA texts from `i18n.messages`.
+- A custom form preset renders the caller's `component` with `data.props`. `useDialogForm()` only works inside the built-in form preset, so a replacement supports v-model components only.
+
+See [Custom presets](?path=/docs/custom-presets--docs) for the complete `useDialogEntry()` contract and the toast counterpart.

@@ -4,6 +4,12 @@ $sans: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
 @forward 'vuetify/settings' with (
     $border-radius-root: 6px,
+    $alert-title-font-size: 0.875rem,
+    $alert-title-font-weight: 600,
+    $alert-title-line-height: 1.25rem,
+    $alert-title-letter-spacing: normal,
+    $switch-track-opacity: 1,
+    $skeleton-loader-text-background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 12%, transparent),
     $rounded: (
         'sm': 4px,
         'md': 6px,

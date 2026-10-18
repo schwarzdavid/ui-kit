@@ -82,9 +82,4 @@
 .ui-toast__close {
     color: inherit;
 }
-
-.ui-toast .v-btn:focus-visible {
-    outline: 2px solid rgb(var(--v-theme-focus, var(--v-theme-primary)));
-    outline-offset: 2px;
-}
 </style>

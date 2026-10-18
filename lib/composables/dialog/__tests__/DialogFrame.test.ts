@@ -27,6 +27,16 @@ function pressEscape(): void {
     overlayContent().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 }
 
+async function clickOverlay(): Promise<void> {
+    const scrim = document.body.querySelector<HTMLElement>('.v-overlay__scrim')
+    if (!scrim) {
+        throw new Error('overlay scrim not rendered')
+    }
+    scrim.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    scrim.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+}
+
 describe('DialogFrame', () => {
     afterEach(() => {
         document.body.innerHTML = ''
@@ -58,6 +68,37 @@ describe('DialogFrame', () => {
         await wrapper.setProps({ persistent: true })
         pressEscape()
         expect(wrapper.emitted('close')).toHaveLength(1)
+    })
+
+    it('emits close on an overlay click unless persistent', async () => {
+        const wrapper = mountFrame()
+        await flushPromises()
+        await clickOverlay()
+        expect(wrapper.emitted('close')).toHaveLength(1)
+        await wrapper.setProps({ persistent: true })
+        await clickOverlay()
+        expect(wrapper.emitted('close')).toHaveLength(1)
+    })
+
+    it('ignores overlay clicks when closeOnOverlayClick is disabled', async () => {
+        const wrapper = mountWithUiKit(DialogFrame, {
+            props: { modelValue: true, title: 'Frame title' },
+            uiKit: { dialog: { closeOnOverlayClick: false } },
+        })
+        await flushPromises()
+        await clickOverlay()
+        pressEscape()
+        expect(wrapper.emitted('close')).toHaveLength(1)
+    })
+
+    it('does not emit close for clicks inside the dialog', async () => {
+        const wrapper = mountFrame()
+        await flushPromises()
+        const body = document.body.querySelector<HTMLElement>('.ui-dialog__body')
+        body?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+        body?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        await new Promise(resolve => setTimeout(resolve, 0))
+        expect(wrapper.emitted('close')).toBeUndefined()
     })
 
     it('disables the close button while persistent', async () => {

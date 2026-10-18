@@ -1,0 +1,52 @@
+.v-field:not(.v-field--focused):not(.v-field--error) .v-field__outline {
+    color: rgb(var(--v-theme-border-strong));
+    --v-field-border-opacity: 1;
+}
+
+.v-btn--variant-outlined {
+    border-color: rgb(var(--v-theme-border-strong));
+}
+
+.v-btn--disabled:is(.v-btn--variant-flat, .v-btn--variant-elevated) {
+    background-color: rgb(var(--v-theme-disabled-surface));
+    color: rgb(var(--v-theme-ink-disabled));
+}
+
+.v-btn--disabled:is(.v-btn--variant-flat, .v-btn--variant-elevated) .v-btn__overlay {
+    opacity: 0;
+}
+
+.v-list-item--active.bg-primary-container > .v-list-item__overlay {
+    opacity: 0;
+}
+
+.v-pagination__item--is-active .v-btn__overlay {
+    opacity: var(--v-activated-opacity);
+}
+
+code,
+kbd,
+pre,
+.text-code-medium,
+.text-code-small {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-variant-ligatures: none;
+}
+
+.text-code-medium {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+}
+
+.text-code-small {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .v-skeleton-loader__bone::after,
+    .v-progress-circular--indeterminate > svg,
+    .v-progress-linear__indeterminate {
+        animation-duration: 4s !important;
+    }
+}

@@ -1,0 +1,80 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        required: true
+        default: prerelease
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
+      preid:
+        description: Prerelease identifier
+        type: string
+        required: false
+        default: alpha
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+  release:
+    needs: verify
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Install NodeJS
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install Dependencies
+        run: npm ci --ignore-scripts
+      - name: Publish dry run
+        run: npm publish --access public --dry-run
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Bump version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+          PREID: ${{ inputs.preid }}
+        run: |
+          if [ "$BUMP" = "prerelease" ]; then
+            npm version prerelease --preid "$PREID" -m "chore(release): %s"
+          else
+            npm version "$BUMP" -m "chore(release): %s"
+          fi
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Push commit and tag
+        run: git push origin HEAD:master --follow-tags
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [[ "$VERSION" == *-* ]]; then
+            gh release create "v$VERSION" --generate-notes --prerelease
+          else
+            gh release create "v$VERSION" --generate-notes
+          fi
+      - name: Start the publish workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh workflow run publish.yml --ref "v$VERSION"

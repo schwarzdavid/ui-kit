@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, type PropType, ref } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import { VBtn } from 'vuetify/components'
 import useVuelidate from '@vuelidate/core'
@@ -7,7 +7,7 @@ import { helpers, required } from '@vuelidate/validators'
 import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialog.vue'
 import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
 import { useDialogForm } from '@/composables/dialog/useDialogForm'
-import { mountDialogPreset, pressEscape } from '@/__tests__/helpers/mountDialogPreset'
+import { mountDialogPreset, overlayContent, pressEscape } from '@/__tests__/helpers/mountDialogPreset'
 
 function deferred<T>() {
     let resolve!: (value: T) => void
@@ -241,7 +241,7 @@ describe('FormDialog', () => {
         })
     })
 
-    it('resolves null on cancel, or rejects with rejectOnEmpty', async () => {
+    it('resolves null on cancel, or rejects when required', async () => {
         const first = mountForm({ component: createContent(() => 'x') })
         await flushPromises()
         await first.button('action.cancel').trigger('click')
@@ -251,7 +251,7 @@ describe('FormDialog', () => {
         first.wrapper.unmount()
         document.body.innerHTML = ''
 
-        const second = mountForm({ component: createContent(() => 'x'), rejectOnEmpty: true })
+        const second = mountForm({ component: createContent(() => 'x'), required: true })
         await flushPromises()
         await second.closeButton()?.trigger('click')
         await vi.waitFor(() => {
@@ -265,5 +265,146 @@ describe('FormDialog', () => {
         await vi.waitFor(() => {
             expect(document.activeElement?.classList.contains('content-input')).toBe(true)
         })
+    })
+})
+
+const ModelContent = defineComponent({
+    props: {
+        modelValue: { type: String as PropType<string | null>, default: null },
+        toolbar: { type: Object as PropType<HTMLElement>, required: true },
+        label: { type: String, required: true },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+        return () => h('input', {
+            'class': 'content-input',
+            'value': props.modelValue ?? '',
+            'data-label': props.label,
+            'data-toolbar': props.toolbar.className,
+            'onInput': (event: Event) => {
+                emit('update:modelValue', (event.target as HTMLInputElement).value)
+            },
+        })
+    },
+})
+
+describe('FormDialog with a v-model component', () => {
+    afterEach(() => {
+        document.body.innerHTML = ''
+    })
+
+    function mountModel(overrides: Partial<Data> = {}) {
+        const mounted = mountForm({ component: ModelContent, props: { label: 'Name' }, initialValue: 'initial', ...overrides })
+        const input = () => {
+            const element = document.body.querySelector<HTMLInputElement>('.content-input')
+            if (!element) {
+                throw new Error('content input not rendered')
+            }
+            return element
+        }
+        const type = (value: string) => {
+            input().value = value
+            input().dispatchEvent(new Event('input', { bubbles: true }))
+        }
+        return { ...mounted, input, type }
+    }
+
+    it('passes props, the initial value and the toolbar element to the component', async () => {
+        const { input } = mountModel()
+        await flushPromises()
+        expect(input().value).toBe('initial')
+        expect(input().dataset.label).toBe('Name')
+        expect(input().dataset.toolbar).toBe('ui-dialog__toolbar')
+    })
+
+    it('resolves the edited value after save', async () => {
+        const { button, type, resolve } = mountModel()
+        await flushPromises()
+        type('renamed')
+        await flushPromises()
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith('renamed')
+        })
+    })
+
+    it('passes the model value through action', async () => {
+        const action = vi.fn((value: unknown) => Promise.resolve(`${String(value)}!`))
+        const { button, resolve } = mountModel({ action })
+        await flushPromises()
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith('initial!')
+        })
+        expect(action).toHaveBeenCalledWith('initial')
+    })
+
+    it('resolves null after cancel instead of the initial value', async () => {
+        const { button, type, resolve } = mountModel()
+        await flushPromises()
+        type('renamed')
+        await flushPromises()
+        await button('action.cancel').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith(null)
+        })
+    })
+
+    it('disables save while a required value is empty, ignores Enter and rejects on cancel', async () => {
+        const { button, form, resolve, reject } = mountModel({ initialValue: undefined, required: true })
+        await flushPromises()
+        expect(button('action.save').attributes('disabled')).toBeDefined()
+        form().dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+        await flushPromises()
+        expect(resolve).not.toHaveBeenCalled()
+        await button('action.cancel').trigger('click')
+        await vi.waitFor(() => {
+            expect(reject).toHaveBeenCalledTimes(1)
+        })
+        expect(resolve).not.toHaveBeenCalled()
+    })
+
+    it('enables save once a required value is set', async () => {
+        const { button, type, resolve } = mountModel({ initialValue: undefined, required: true })
+        await flushPromises()
+        type('value')
+        await flushPromises()
+        expect(button('action.save').attributes('disabled')).toBeUndefined()
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith('value')
+        })
+    })
+
+    it('does not disable save for a required form that registers finish', async () => {
+        const { button } = mountForm({ component: createContent(() => 'x'), required: true })
+        await flushPromises()
+        expect(button('action.save').attributes('disabled')).toBeUndefined()
+    })
+
+    it('does not pass modelValue and toolbar to components that do not declare them', async () => {
+        mountForm({ component: createContent(() => 'x'), initialValue: 'initial' })
+        await flushPromises()
+        const root = document.body.querySelector('.ui-dialog__content > div')
+        expect(root?.hasAttribute('modelvalue')).toBe(false)
+        expect(root?.hasAttribute('toolbar')).toBe(false)
+    })
+
+    it('uses the md width by default and goes fullscreen on phones', async () => {
+        const first = mountModel()
+        await flushPromises()
+        expect(overlayContent().style.maxWidth).toBe('560px')
+        first.wrapper.unmount()
+        document.body.innerHTML = ''
+
+        const originalWidth = window.innerWidth
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 360 })
+        try {
+            mountModel()
+            await flushPromises()
+            expect(document.body.querySelector('.ui-dialog--fullscreen')).not.toBeNull()
+        } finally {
+            Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
+        }
     })
 })

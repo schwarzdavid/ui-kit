@@ -95,7 +95,7 @@ const confirmed = await dialog.confirm('items.delete.title', 'items.delete.conte
 await dialog.info('about.title', 'about.content')
 ```
 
-`useDialog()` also provides `prompt()` for custom input components and `form()` for validated forms.
+`useDialog()` also provides `confirm()` and `form()`, which renders your own input or form component and resolves with its value.
 
 ### useToast
 

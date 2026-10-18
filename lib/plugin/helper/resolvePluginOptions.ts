@@ -11,7 +11,6 @@ export function resolvePluginOptions(options: CreateUIKitOptions = {}): PluginOp
         dialog: {
             info: markRaw(components?.dialog?.info ?? defaults.components.dialog.info),
             confirm: markRaw(components?.dialog?.confirm ?? defaults.components.dialog.confirm),
-            prompt: markRaw(components?.dialog?.prompt ?? defaults.components.dialog.prompt),
             form: markRaw(components?.dialog?.form ?? defaults.components.dialog.form),
         },
         toast: markRaw(components?.toast ?? defaults.components.toast),

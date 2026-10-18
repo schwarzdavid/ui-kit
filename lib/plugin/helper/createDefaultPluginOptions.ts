@@ -2,7 +2,6 @@ import { markRaw } from 'vue'
 import type { PluginOptions } from '@/plugin/types/PluginOptions'
 import InfoDialog from '@/composables/dialog/components/dialog/presets/InfoDialog.vue'
 import ConfirmDialog from '@/composables/dialog/components/dialog/presets/ConfirmDialog.vue'
-import PromptDialog from '@/composables/dialog/components/dialog/presets/PromptDialog.vue'
 import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialog.vue'
 import ToastEntry from '@/composables/toast/components/ToastEntry.vue'
 
@@ -14,6 +13,9 @@ export const createDefaultPluginOptions = (): PluginOptions => ({
     toast: {
         timeout: 4000,
         errorTimeout: false,
+    },
+    dialog: {
+        closeOnOverlayClick: true,
     },
     i18n: {
         messages: {
@@ -30,7 +32,6 @@ export const createDefaultPluginOptions = (): PluginOptions => ({
         dialog: {
             info: markRaw(InfoDialog),
             confirm: markRaw(ConfirmDialog),
-            prompt: markRaw(PromptDialog),
             form: markRaw(FormDialog),
         },
         toast: markRaw(ToastEntry),

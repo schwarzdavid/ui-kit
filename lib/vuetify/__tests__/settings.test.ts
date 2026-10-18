@@ -10,7 +10,7 @@ const VUETIFY_LIB = resolve(import.meta.dirname, '../../../node_modules/vuetify/
 const vuetifyImporter: FileImporter<'sync'> = {
     findFileUrl(url) {
         if (url === 'vuetify/settings') {
-            return pathToFileURL(resolve(VUETIFY_LIB, 'styles/settings'))
+            return pathToFileURL(resolve(VUETIFY_LIB, '../_settings.scss'))
         }
         if (url.startsWith('vuetify/lib/')) {
             return pathToFileURL(resolve(VUETIFY_LIB, url.slice('vuetify/lib/'.length)))
@@ -41,6 +41,32 @@ describe('vuetify settings.scss', () => {
         expect(css).toContain('border-top-right-radius: 4px')
         expect(css).toContain('font-weight: 600')
         expect(css).toContain('font-size: 1.25rem')
+    })
+
+    it('sets compact alert titles and opaque switch tracks', () => {
+        const css = compileProbe(`
+            @use 'settings';
+            .probe {
+                font-size: settings.$alert-title-font-size;
+                font-weight: settings.$alert-title-font-weight;
+                line-height: settings.$alert-title-line-height;
+                opacity: settings.$switch-track-opacity;
+            }
+        `)
+        expect(css).toContain('font-size: 0.875rem')
+        expect(css).toContain('font-weight: 600')
+        expect(css).toContain('line-height: 1.25rem')
+        expect(css).toContain('opacity: 1')
+    })
+
+    it('draws skeleton bones at 12 % of on-surface instead of the opaque border opacity', () => {
+        const css = compileProbe(`
+            @use 'settings';
+            .probe {
+                background: settings.$skeleton-loader-text-background;
+            }
+        `)
+        expect(css).toContain('background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 12%, transparent)')
     })
 
     it('is exported under both the .scss and the extensionless subpath', () => {

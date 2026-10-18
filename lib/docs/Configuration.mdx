@@ -10,6 +10,7 @@ import { Meta } from '@storybook/addon-docs/blocks'
 app.use(createUIKit({
     loading: { delay: 500 },
     toast: { timeout: 6000, errorTimeout: 10000 },
+    dialog: { closeOnOverlayClick: false },
     i18n: { messages: { close: 'buttons.close' } },
     components: { dialog: { confirm: MyConfirmDialog } },
 }))
@@ -52,6 +53,12 @@ app.use(createUIKit({
         <td>`false`</td>
     </tr>
     <tr>
+        <td>dialog.closeOnOverlayClick</td>
+        <td>boolean</td>
+        <td>Whether a click on the overlay behind a dialog closes it like the cancel button. It never closes a confirm dialog with `permanent` or a form dialog while it saves.</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
         <td>i18n.messages</td>
         <td>Record&lt;PluginI18nMessageKey, string&gt;</td>
         <td>Translation keys of the default dialog and toast labels. See below.</td>
@@ -68,12 +75,6 @@ app.use(createUIKit({
         <td>Component</td>
         <td>The component that renders `dialog.confirm()`.</td>
         <td>The built-in confirm preset</td>
-    </tr>
-    <tr>
-        <td>components.dialog.prompt</td>
-        <td>Component</td>
-        <td>The component that renders `dialog.prompt()`.</td>
-        <td>The built-in prompt preset</td>
     </tr>
     <tr>
         <td>components.dialog.form</td>
@@ -117,7 +118,7 @@ The dialogs and toasts label their default buttons with the following translatio
     </tr>
     <tr>
         <td>cancel</td>
-        <td>Cancel button of `prompt()` and `form()`</td>
+        <td>Cancel button of `form()`</td>
         <td>`action.cancel`</td>
     </tr>
     <tr>
@@ -127,7 +128,7 @@ The dialogs and toasts label their default buttons with the following translatio
     </tr>
     <tr>
         <td>save</td>
-        <td>Save button of `prompt()` and `form()`</td>
+        <td>Save button of `form()`</td>
         <td>`action.save`</td>
     </tr>
     <tr>

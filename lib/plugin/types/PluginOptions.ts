@@ -17,10 +17,13 @@ export interface PluginToastOptions {
     errorTimeout: number | false
 }
 
+export interface PluginDialogOptions {
+    closeOnOverlayClick: boolean
+}
+
 export interface PluginDialogComponentOptions {
     info: Component
     confirm: Component
-    prompt: Component
     form: Component
 }
 
@@ -32,6 +35,7 @@ export interface PluginComponentOptions {
 export interface PluginOptions {
     loading: PluginLoadingOptions
     toast: PluginToastOptions
+    dialog: PluginDialogOptions
     i18n: PluginI18nOptions
     components: PluginComponentOptions
 }

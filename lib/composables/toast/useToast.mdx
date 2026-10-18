@@ -9,7 +9,7 @@ Toast util composable to functionally show snackbars.
 
 ## General Usage
 
-The toasts are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet. They stack bottom-centred, the newest closest to the edge, at most 560px wide. Each toast shows a monochrome outline icon for its type, the message, an optional action and a dismiss button. Error toasts use `role="alert"` and stay until dismissed; the others disappear after `toast.timeout`. Screen readers hear every non-error toast through a persistent, visually hidden polite live region that the outlet keeps next to the stack, so a message is announced even though the toast itself is inserted with its text.
+The toasts are rendered by `UiKitOutlet`; see [Installation](?path=/docs/installation--docs) for registering the plugin and placing the outlet. They stack bottom-centred, the newest closest to the edge, at most 560px wide. Each toast shows a monochrome outline icon for its type, the message, an optional action and a dismiss button. Error toasts use `role="alert"` and stay until dismissed; the others disappear after `toast.timeout`. The timeout pauses while the pointer rests on a toast, while focus is inside it and while the browser tab is hidden, and then continues with the remaining time. Screen readers hear every non-error toast through a persistent, visually hidden polite live region that the outlet keeps next to the stack, so a message is announced even though the toast itself is inserted with its text.
 
 ## Success/Info/Warning/Error Toasts
 

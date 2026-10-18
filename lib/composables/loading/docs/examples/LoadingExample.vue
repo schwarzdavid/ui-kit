@@ -1,6 +1,8 @@
 <template>
-    <VBtn :loading="defaultLoading" color="primary" @click="performDefaultAction">Default</VBtn>
-    <VBtn color="primary" @click="performOverlayAction">With Overlay</VBtn>
+    <div class="d-flex flex-wrap ga-4">
+        <VBtn :loading="defaultLoading" variant="flat" color="primary" @click="performDefaultAction">Default</VBtn>
+        <VBtn @click="performOverlayAction">With Overlay</VBtn>
+    </div>
     <p v-if="lastResult !== null" class="mt-4">Last result: {{ lastResult }}</p>
 </template>
 

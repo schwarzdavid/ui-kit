@@ -87,6 +87,75 @@ describe('ToastOutlet', () => {
         expect(wrapper.find('.ui-toast-outlet__announcer').text()).toBe('Saved')
     })
 
+    it('pauses the timeout while the toast is hovered', async () => {
+        vi.useFakeTimers()
+        try {
+            const { wrapper, queue } = setup()
+            const resolve = vi.fn()
+            queue.addToQueue({ message: 'Saved', translateMessage: false, timeout: 100, type: ToastType.INFO, resolve })
+            await nextTick()
+            await wrapper.find('.ui-toast').trigger('mouseenter')
+            vi.advanceTimersByTime(1000)
+            expect(resolve).not.toHaveBeenCalled()
+            await wrapper.find('.ui-toast').trigger('mouseleave')
+            vi.advanceTimersByTime(100)
+            expect(resolve).toHaveBeenCalledWith(false)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('pauses the timeout while focus stays inside the toast', async () => {
+        vi.useFakeTimers()
+        try {
+            const { wrapper, queue } = setup()
+            const resolve = vi.fn()
+            queue.addToQueue({ message: 'Saved', translateMessage: false, timeout: 100, type: ToastType.INFO, resolve })
+            await nextTick()
+            const toast = wrapper.find('.ui-toast')
+            const closeButton = toast.find('.ui-toast__close').element
+            await toast.trigger('focusin')
+            await toast.trigger('focusout', { relatedTarget: closeButton })
+            vi.advanceTimersByTime(1000)
+            expect(resolve).not.toHaveBeenCalled()
+            await toast.trigger('focusout', { relatedTarget: null })
+            vi.advanceTimersByTime(100)
+            expect(resolve).toHaveBeenCalledWith(false)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('pauses the timeouts while the document is hidden, including toasts queued meanwhile', async () => {
+        vi.useFakeTimers()
+        const setVisibility = (state: DocumentVisibilityState) => {
+            Object.defineProperty(document, 'visibilityState', { configurable: true, value: state })
+            document.dispatchEvent(new Event('visibilitychange'))
+        }
+        try {
+            const { queue } = setup()
+            const first = vi.fn()
+            const second = vi.fn()
+            queue.addToQueue({ message: 'first', translateMessage: false, timeout: 100, type: ToastType.INFO, resolve: first })
+            await nextTick()
+            setVisibility('hidden')
+            await nextTick()
+            queue.addToQueue({ message: 'second', translateMessage: false, timeout: 100, type: ToastType.INFO, resolve: second })
+            await nextTick()
+            vi.advanceTimersByTime(1000)
+            expect(first).not.toHaveBeenCalled()
+            expect(second).not.toHaveBeenCalled()
+            setVisibility('visible')
+            await nextTick()
+            vi.advanceTimersByTime(100)
+            expect(first).toHaveBeenCalledWith(false)
+            expect(second).toHaveBeenCalledWith(false)
+        } finally {
+            Reflect.deleteProperty(document, 'visibilityState')
+            vi.useRealTimers()
+        }
+    })
+
     it('switches to the mobile layout on phones', () => {
         const originalWidth = window.innerWidth
         Object.defineProperty(window, 'innerWidth', { configurable: true, value: 360 })

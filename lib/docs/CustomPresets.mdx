@@ -49,7 +49,7 @@ const { data, resolve, reject } = useDialogEntry<ConfirmDialogProps, boolean>()
     <tr>
         <td>data</td>
         <td>Data</td>
-        <td>The options the caller passed to `dialog.info()`, `confirm()`, `prompt()` or `form()`: `InfoDialogProps`, `ConfirmDialogProps`, `PromptDialogProps` or `FormDialogProps`</td>
+        <td>The options the caller passed to `dialog.info()`, `confirm()` or `form()`: `InfoDialogProps`, `ConfirmDialogProps` or `FormDialogProps`</td>
     </tr>
     <tr>
         <td>resolve(value)</td>
@@ -154,4 +154,4 @@ A custom toast must settle through `close()` or `trigger()`; the raw queue entry
 </script>
 ```
 
-The toast outlet stacks the toasts bottom-centred with `pointer-events: none` on the container, so give your root element `pointer-events: auto`. A custom toast component must render exactly one root element, because the outlet renders it inside a `TransitionGroup`. The outlet announces every non-error toast through its own polite live region, so a custom toast needs no `role` of its own; give error toasts `role="alert"` so they are announced at once.
+The toast outlet stacks the toasts bottom-centred with `pointer-events: none` on the container, so give your root element `pointer-events: auto`. A custom toast component must render exactly one root element, because the outlet renders it inside a `TransitionGroup` and attaches the hover and focus listeners that pause the timeout to that root. The outlet announces every non-error toast through its own polite live region, so a custom toast needs no `role` of its own; give error toasts `role="alert"` so they are announced at once.

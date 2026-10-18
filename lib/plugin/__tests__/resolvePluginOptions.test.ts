@@ -20,12 +20,16 @@ describe('resolvePluginOptions', () => {
         expect(options.loading).toEqual({ delay: 2000, overlay: false })
     })
 
+    it('closes dialogs on overlay clicks by default and lets the option disable it', () => {
+        expect(resolvePluginOptions().dialog.closeOnOverlayClick).toBe(true)
+        expect(resolvePluginOptions({ dialog: { closeOnOverlayClick: false } }).dialog.closeOnOverlayClick).toBe(false)
+    })
+
     it('replaces dialog components per key and keeps the other defaults', () => {
         const defaults = createDefaultPluginOptions()
         const options = resolvePluginOptions({ components: { dialog: { confirm: Custom } } })
         expect(options.components.dialog.confirm).toBe(Custom)
         expect(options.components.dialog.info).toBe(defaults.components.dialog.info)
-        expect(options.components.dialog.prompt).toBe(defaults.components.dialog.prompt)
         expect(options.components.dialog.form).toBe(defaults.components.dialog.form)
         expect(options.components.toast).toBe(defaults.components.toast)
     })

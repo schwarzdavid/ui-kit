@@ -7,6 +7,7 @@
         no-click-animation
         :scrollable="false"
         retain-focus
+        @click:outside="onOverlayClick"
         @keydown.esc.stop.prevent="onEscape"
         @after-enter="emit('opened')"
         @after-leave="emit('closed')">
@@ -66,6 +67,7 @@
     import { resolveDialogWidth } from '@/composables/dialog/internal/dialogWidths'
     import type { DialogWidth } from '@/composables/dialog/types/DialogWidth'
     import { Icons } from '@/internal/icons'
+    import { usePluginContext } from '@/plugin/composables/usePluginContext'
 
     const props = withDefaults(defineProps<{
         modelValue: boolean
@@ -93,6 +95,7 @@
     }>()
 
     const slots = useSlots()
+    const { options } = usePluginContext()
     const { xs } = useDisplay()
     const translate = useMaybeTranslation()
     const closeCta = useDialogCta(undefined, 'close')
@@ -102,6 +105,12 @@
 
     function onEscape(): void {
         if (!props.persistent) {
+            emit('close')
+        }
+    }
+
+    function onOverlayClick(): void {
+        if (options.dialog.closeOnOverlayClick && !props.persistent) {
             emit('close')
         }
     }
@@ -171,11 +180,6 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 16px 24px 20px;
-}
-
-.ui-dialog :is(.v-btn, a, input, textarea, select):focus-visible {
-    outline: 2px solid rgb(var(--v-theme-focus, var(--v-theme-primary)));
-    outline-offset: 2px;
 }
 
 .ui-dialog--fullscreen {

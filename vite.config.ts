@@ -22,7 +22,11 @@ function emitVuetifySettings(): Plugin {
 
 export default defineConfig({
     plugins: [
-        dts({ bundleTypes: true, tsconfigPath: 'tsconfig.app.json' }),
+        dts({
+            bundleTypes: true,
+            tsconfigPath: 'tsconfig.app.json',
+            exclude: ['.storybook/**', 'lib/**/__tests__/**', 'lib/**/docs/**', 'lib/**/*.mdx'],
+        }),
         emitVuetifySettings(),
         vue(),
         VueI18nPlugin({ runtimeOnly: false }),

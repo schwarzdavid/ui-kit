@@ -11,6 +11,9 @@
         @submit="submit"
         @opened="focusFirstInput"
         @closed="settle">
+        <template #header>
+            <div ref="toolbar" class="ui-dialog__toolbar" />
+        </template>
         <VAlert
             v-if="error !== null"
             type="error"
@@ -20,38 +23,39 @@
             :title="saveFailedTitle"
             :text="error" />
         <div ref="content" class="ui-dialog__content">
-            <component :is="data.component" v-bind="componentProps" />
+            <component :is="data.component" v-if="toolbar" v-bind="componentProps" />
         </div>
         <template #actions>
             <VBtn variant="text" :disabled="loading" @click="closeDialog">
                 <MaybeTranslation :content="abortCta.text" :translate="abortCta.translateText" />
             </VBtn>
-            <VBtn variant="flat" color="primary" type="submit" :loading="loading">
+            <VBtn variant="flat" color="primary" type="submit" :disabled="isSaveDisabled" :loading="loading">
                 <MaybeTranslation :content="saveCta.text" :translate="saveCta.translateText" />
             </VBtn>
         </template>
     </DialogFrame>
 </template>
 
-<script lang="ts" setup generic="R, T = R, C extends Component = Component">
-    import { type Component, computed, provide, ref, useTemplateRef } from 'vue'
+<script lang="ts" setup generic="T, R = T, C extends Component = Component">
+    import { type Component, computed, provide, ref, shallowRef, toValue, useTemplateRef } from 'vue'
     import { VAlert, VBtn } from 'vuetify/components'
     import useVuelidate from '@vuelidate/core'
     import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
-    import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
+    import type { FormDialogBaseProps } from '@/composables/dialog/presets/FormDialogProps'
     import type { DialogFormFinish } from '@/composables/dialog/types/DialogFormContext'
     import { DIALOG_FORM_INJECTION_KEY } from '@/composables/dialog/constants/injectionKeys'
+    import { declaresProp } from '@/composables/dialog/internal/declaresProp'
+    import { isEmptyValue } from '@/composables/dialog/internal/isEmptyValue'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
     import { useDialogEntry } from '@/composables/dialog/useDialogEntry'
     import { useLoading } from '@/composables/loading/useLoading'
     import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
     import { usePluginContext } from '@/plugin/composables/usePluginContext'
-    import { Errors } from '@/plugin/constants/errors'
     import { Icons } from '@/internal/icons'
     import { toErrorMessage } from '@/internal/toErrorMessage'
 
-    const { data, resolve, reject } = useDialogEntry<FormDialogProps<R, T, boolean>>()
+    const { data, resolve, reject } = useDialogEntry<FormDialogBaseProps<T, R, boolean> & { props?: Record<string, unknown> }>()
     const { options } = usePluginContext()
     const translate = useMaybeTranslation()
     const saveCta = useDialogCta(data.saveCta, 'save')
@@ -60,29 +64,41 @@
     const unknownErrorText = computed(() => translate(options.i18n.messages.unknownError, true))
     const open = ref(true)
     const error = ref<string | null>(null)
+    const value = ref<T | null>(toValue(data.initialValue) ?? null)
+    const finish = shallowRef<DialogFormFinish<T> | null>(null)
+    const toolbar = useTemplateRef<HTMLDivElement>('toolbar')
     const content = useTemplateRef<HTMLDivElement>('content')
     const v = useVuelidate()
     const { loading, action } = useLoading(performAction)
-    const componentProps = computed(() => ('props' in data ? data.props : {}) as Record<string, unknown>)
-
-    let finish: DialogFormFinish<T> | null = null
-    let resolveValue: unknown = null
     const submitting = ref<boolean>(false)
+    const isSaveDisabled = computed(() => !!data.required && finish.value === null && isEmptyValue(value.value))
+    const componentProps = computed(() => {
+        const props: Record<string, unknown> = { ...data.props }
+        if (declaresProp(data.component, 'modelValue')) {
+            props.modelValue = value.value
+            props['onUpdate:modelValue'] = (updated: T | null) => {
+                value.value = updated
+            }
+        }
+        if (declaresProp(data.component, 'toolbar')) {
+            props.toolbar = toolbar.value
+        }
+        return props
+    })
+
+    let resolveValue: unknown = null
 
     provide(DIALOG_FORM_INJECTION_KEY, {
         register(handler: DialogFormFinish<T>) {
-            finish = handler
+            finish.value = handler
         },
         submit,
         loading,
     })
 
     async function submit(): Promise<void> {
-        if (loading.value || submitting.value) {
+        if (loading.value || submitting.value || isSaveDisabled.value) {
             return
-        }
-        if (!finish) {
-            throw new Error(Errors.DIALOG_FORM_NOT_REGISTERED)
         }
         submitting.value = true
         try {
@@ -99,12 +115,8 @@
     }
 
     async function performAction(): Promise<void> {
-        if (!finish) {
-            throw new Error(Errors.DIALOG_FORM_NOT_REGISTERED)
-        }
-        const result = await finish()
-        const value: unknown = data.action ? await data.action(result) : result
-        resolveValue = value
+        const result = finish.value ? await finish.value() : value.value
+        resolveValue = data.action ? await data.action(result) : result
         open.value = false
     }
 
@@ -120,10 +132,16 @@
     }
 
     function settle(): void {
-        if (data.rejectOnEmpty && resolveValue === null) {
+        if (data.required && resolveValue === null) {
             reject()
             return
         }
         resolve(resolveValue)
     }
 </script>
+
+<style lang="scss">
+.ui-dialog__toolbar {
+    display: contents;
+}
+</style>

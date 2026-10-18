@@ -6,7 +6,6 @@ export * from '@/composables/dialog/useDialogEntry'
 export * from '@/composables/dialog/useDialogForm'
 export * from '@/composables/dialog/presets/ConfirmDialogProps'
 export * from '@/composables/dialog/presets/InfoDialogProps'
-export * from '@/composables/dialog/presets/PromptDialogProps'
 export * from '@/composables/dialog/presets/FormDialogProps'
 export type { DialogCta, DialogValueCta, DialogActionCta, InteractiveDialogCta } from '@/composables/dialog/types/DialogCta'
 export type { DialogEntryContext } from '@/composables/dialog/types/DialogEntryContext'
@@ -28,6 +27,7 @@ export type {
     PluginI18nMessageKey,
     PluginLoadingOptions,
     PluginToastOptions,
+    PluginDialogOptions,
     PluginComponentOptions,
     PluginDialogComponentOptions,
     CreateUIKitOptions,

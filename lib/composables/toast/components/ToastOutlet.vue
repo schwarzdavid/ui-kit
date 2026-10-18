@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { nextTick, shallowRef, watch } from 'vue'
+    import { nextTick, onBeforeUnmount, onMounted, shallowRef, watch, watchEffect } from 'vue'
     import { useDisplay } from 'vuetify'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import { useToastQueue } from '@/composables/toast/internal/useToastQueue'
@@ -21,7 +21,7 @@
     import type { ToastQueueEntry } from '@/composables/toast/types/ToastQueueEntry'
     import { ToastType } from '@/composables/toast/types/ToastType'
 
-    const { queue } = useToastQueue()
+    const { queue, pause, resume } = useToastQueue()
     const { xs } = useDisplay()
     const announced = shallowRef<ToastQueueEntry | null>(null)
     const announcedEntries = new WeakSet<ToastQueueEntry>()
@@ -35,6 +35,31 @@
         void nextTick(() => {
             announced.value = latest
         })
+    })
+
+    const hidden = shallowRef(false)
+
+    function onVisibilityChange(): void {
+        hidden.value = document.visibilityState === 'hidden'
+    }
+
+    onMounted(() => {
+        onVisibilityChange()
+        document.addEventListener('visibilitychange', onVisibilityChange)
+    })
+
+    onBeforeUnmount(() => {
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+    })
+
+    watchEffect(() => {
+        for (const entry of queue.value) {
+            if (hidden.value) {
+                pause(entry.id, 'hidden')
+            } else {
+                resume(entry.id, 'hidden')
+            }
+        }
     })
 
     function onBeforeLeave(el: Element): void {
