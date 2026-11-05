@@ -44,7 +44,9 @@ jobs:
       - name: Install Dependencies
         run: npm ci --ignore-scripts
       - name: Publish dry run
-        run: npm publish --access public --dry-run
+        run: |
+          TAG="$(node -p "const pre = require('./package.json').version.split('-')[1]; const id = pre ? pre.split('.')[0] : ''; !pre ? 'latest' : /^[0-9]+$/.test(id) ? 'next' : id")"
+          npm publish --access public --dry-run --tag "$TAG"
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
