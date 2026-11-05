@@ -18,7 +18,7 @@
                 @click="() => onCtaClick(cta)">
                 <MaybeTranslation :content="cta.text" :translate="cta.translateText" />
             </VBtn>
-            <VBtn v-if="defaultCta" variant="flat" color="primary" @click="closeWithDefault">
+            <VBtn v-if="showDefaultCta && defaultCta" variant="flat" color="primary" @click="closeWithDefault">
                 <MaybeTranslation :content="defaultCta.text" :translate="defaultCta.translateText" />
             </VBtn>
         </template>
@@ -27,6 +27,7 @@
 
 <script lang="ts" setup generic="T">
     import { computed, ref } from 'vue'
+    import { useDisplay } from 'vuetify'
     import { VBtn } from 'vuetify/components'
     import UiResponsiveDialog from '@/components/sheet/UiResponsiveDialog.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
@@ -39,7 +40,9 @@
 
     const defaultCta = data.defaultCta === false ? null : useDialogCta(data.defaultCta, 'close')
     const additionalCta = computed(() => data.additionalCta ?? [])
-    const hasActions = computed(() => defaultCta !== null || additionalCta.value.length > 0)
+    const { mobile } = useDisplay()
+    const showDefaultCta = computed(() => defaultCta !== null && !mobile.value)
+    const hasActions = computed(() => showDefaultCta.value || additionalCta.value.length > 0)
     const open = ref(true)
     const componentProps = computed(() => ('props' in data ? data.props : {}) as Record<string, unknown>)
 

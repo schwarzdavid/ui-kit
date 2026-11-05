@@ -5,6 +5,7 @@ import { VBtn } from 'vuetify/components'
 import InfoDialog from '@/composables/dialog/components/dialog/presets/InfoDialog.vue'
 import type { InfoDialogProps } from '@/composables/dialog/presets/InfoDialogProps'
 import { mountDialogPreset, overlayContent } from '@/__tests__/helpers/mountDialogPreset'
+import { withViewportWidth } from '@/__tests__/helpers/withViewportWidth'
 
 function mountInfo(data: InfoDialogProps<unknown>) {
     const mounted = mountDialogPreset(InfoDialog, data)
@@ -37,6 +38,33 @@ describe('InfoDialog', () => {
         await footerButton('action.close').trigger('click')
         await vi.waitFor(() => {
             expect(resolve).toHaveBeenCalledWith(null)
+        })
+    })
+
+    it('drops the default CTA in the bottom sheet and keeps the close icon', async () => {
+        await withViewportWidth(360, async () => {
+            const { resolve } = mountInfo({
+                title: 'Info',
+                content: 'Text',
+                additionalCta: [{ text: 'Red', translateText: false, value: 'red' }],
+            })
+            await flushPromises()
+            const footer = document.body.querySelector('.ui-sheet__footer')
+            expect(footer?.textContent).toContain('Red')
+            expect(footer?.textContent).not.toContain('action.close')
+            document.body.querySelector<HTMLElement>('.ui-sheet--content .ui-sheet__close')?.click()
+            await vi.waitFor(() => {
+                expect(resolve).toHaveBeenCalledWith(null)
+            })
+        })
+    })
+
+    it('renders no sheet footer when only the default CTA exists', async () => {
+        await withViewportWidth(360, async () => {
+            mountInfo({ title: 'Info', content: 'Text' })
+            await flushPromises()
+            expect(document.body.querySelector('.ui-sheet')).not.toBeNull()
+            expect(document.body.querySelector('.ui-sheet__footer')).toBeNull()
         })
     })
 

@@ -114,7 +114,7 @@ By calling this function, a info dialog will be created with your defined title 
     <tr>
         <td>defaultCta</td>
         <td>Partial&lt;DialogCta&gt; | false</td>
-        <td>The default call-to-action button, which closes the dialog and resolves with `null`. The default text comes from the plugin option `i18n.messages.close`. If set to `false`, the default CTA will be hidden.</td>
+        <td>The default call-to-action button, which closes the dialog and resolves with `null`. The default text comes from the plugin option `i18n.messages.close`. If set to `false`, the default CTA will be hidden. In the mobile bottom sheet it is always hidden, because the close icon in the header does the same.</td>
         <td>
             ```ts
             {

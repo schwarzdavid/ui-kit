@@ -72,6 +72,7 @@ describe('UiBottomSheet', () => {
         expect(query('.ui-sheet__preview').style.display).not.toBe('none')
         expect(query('.ui-sheet__preview .teaser').textContent).toBe('Teaser')
         expect(query('.ui-sheet__content').style.display).toBe('none')
+        expect(document.body.querySelector('.ui-sheet__close')).toBeNull()
     })
 
     it('opens in the content stage without a preview slot', async () => {
@@ -173,10 +174,10 @@ describe('UiBottomSheet', () => {
         expect(wrapper.emitted('update:stage')).toEqual([['content']])
     })
 
-    it('shows the close button only in fullscreen', async () => {
+    it('shows the close button in the content and fullscreen stages', async () => {
         const wrapper = mountSheet()
         await flushPromises()
-        expect(document.body.querySelector('.ui-sheet__close')).toBeNull()
+        expect(query('.ui-sheet--content .ui-sheet__close')).not.toBeNull()
         await wrapper.setProps({ stage: 'fullscreen' })
         const close = query('.ui-sheet__close')
         expect(close.getAttribute('aria-label')).toBe('action.close')

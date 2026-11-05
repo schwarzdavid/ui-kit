@@ -9,9 +9,6 @@
         </template>
         <p>You are using 8.2 GB of your 10 GB quota. Messages in the trash count towards the quota until they are deleted after 30 days.</p>
         <p>Archive old messages or ask an administrator for a larger mailbox if you run out of space.</p>
-        <template #actions>
-            <VBtn variant="flat" color="primary" @click="open = false">Close</VBtn>
-        </template>
     </UiResponsiveDialog>
 </template>
 

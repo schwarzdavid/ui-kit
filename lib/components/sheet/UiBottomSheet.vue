@@ -37,7 +37,7 @@
                     </h2>
                     <slot name="header" />
                     <VBtn
-                        v-if="closable && currentStage === 'fullscreen'"
+                        v-if="closable && currentStage !== 'preview'"
                         variant="text"
                         density="comfortable"
                         :icon="Icons.close"
@@ -450,6 +450,10 @@
 .ui-sheet--fullscreen .ui-sheet__header {
     border-bottom: 1px solid var(--ui-sheet-border);
     padding-bottom: 8px;
+}
+
+.ui-sheet__close {
+    margin-inline-start: auto;
 }
 
 .ui-sheet__title {
