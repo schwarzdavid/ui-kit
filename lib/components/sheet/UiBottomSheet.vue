@@ -363,7 +363,7 @@
 <style lang="scss">
 .v-bottom-sheet > .v-bottom-sheet__content.v-overlay__content.ui-sheet-overlay {
     max-height: 100%;
-    margin: 0;
+    margin: 0 auto;
     box-shadow: none;
 }
 
