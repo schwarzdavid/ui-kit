@@ -40,5 +40,5 @@
     }>()
 
     const model = defineModel<number>()
-    const { smAndDown: mobile } = useDisplay()
+    const { mobile } = useDisplay()
 </script>

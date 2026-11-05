@@ -13,6 +13,14 @@ describe('createVuetifyOptions', () => {
         expect(options.defaults).toEqual(defaults)
     })
 
+    it('sets the mobile breakpoint to sm', () => {
+        expect(createVuetifyOptions().display?.mobileBreakpoint).toBe('sm')
+    })
+
+    it('lets consumers override the mobile breakpoint', () => {
+        expect(createVuetifyOptions({ display: { mobileBreakpoint: 'md' } }).display?.mobileBreakpoint).toBe('md')
+    })
+
     it('deep-merges overrides over the base', () => {
         const options = createVuetifyOptions({
             theme: { defaultTheme: 'light' },

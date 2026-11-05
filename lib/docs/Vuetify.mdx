@@ -19,7 +19,7 @@ import * as GalleryStories from './stories/VuetifyTheme.stories.ts'
     <tbody>
     <tr>
         <td>`createVuetifyOptions(overrides?)`</td>
-        <td>Returns `{ theme, icons, defaults }` with your overrides merged on top: `theme` and `defaults` are deep-merged, `icons` are merged one level deep (`defaultSet` replaced, `aliases` and `sets` merged by key). Pass the result to `createVuetify()`.</td>
+        <td>Returns `{ theme, icons, defaults, display }` with your overrides merged on top: `theme` and `defaults` are deep-merged, `icons` are merged one level deep (`defaultSet` replaced, `aliases` and `sets` merged by key). Pass the result to `createVuetify()`.</td>
     </tr>
     <tr>
         <td>`lightTheme`, `darkTheme`</td>
@@ -32,6 +32,10 @@ import * as GalleryStories from './stories/VuetifyTheme.stories.ts'
     <tr>
         <td>`defaults`</td>
         <td>Component defaults: outlined `ink` buttons, outlined comfortable fields focused in `focus`, button groups in the secondary style, flat bordered cards and expansion panels, tonal alerts, `primary-container` for the active list item, dividers in `border`, switches in `ink` (on) and `border-strong` (off), a `scrim` dialog backdrop at 48 %, inverse snackbars.</td>
+    </tr>
+    <tr>
+        <td>`display`</td>
+        <td>`mobileBreakpoint: 'sm'`. The dialogs of this library render as a bottom sheet below this breakpoint, so an override moves the switch.</td>
     </tr>
     <tr>
         <td>`icons`</td>

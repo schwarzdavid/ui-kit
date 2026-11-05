@@ -6,7 +6,9 @@
   "action": {
     "cancel": "Cancel",
     "save": "Save",
-    "close": "Close"
+    "close": "Close",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "dialog": {
     "saveFailed": "Couldn't save"

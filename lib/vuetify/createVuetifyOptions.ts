@@ -15,6 +15,7 @@ export function createVuetifyOptions(overrides: VuetifyOptions = {}): VuetifyOpt
             },
         },
         defaults: cloneDeep(defaults),
+        display: { mobileBreakpoint: 'sm' },
     }
     const merged: VuetifyOptions = merge(base, rest)
     merged.icons = {

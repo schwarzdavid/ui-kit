@@ -1,5 +1,5 @@
 <template>
-    <DialogFrame
+    <UiResponsiveDialog
         :model-value="open"
         :title="data.title"
         :translate-title="data.translateTitle"
@@ -24,13 +24,13 @@
                 <MaybeTranslation :content="button.cta.text" :translate="button.cta.translateText" />
             </VBtn>
         </template>
-    </DialogFrame>
+    </UiResponsiveDialog>
 </template>
 
 <script lang="ts" setup>
     import { type ComponentPublicInstance, computed, ref } from 'vue'
     import { VBtn } from 'vuetify/components'
-    import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
+    import UiResponsiveDialog from '@/components/sheet/UiResponsiveDialog.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import { ConfirmDialogLevel, type ConfirmDialogProps } from '@/composables/dialog/presets/ConfirmDialogProps'
     import type { DialogCta } from '@/composables/dialog/types/DialogCta'

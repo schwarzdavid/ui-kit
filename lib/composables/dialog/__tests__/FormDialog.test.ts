@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, type PropType, ref } from 'vue'
-import { flushPromises } from '@vue/test-utils'
+import { defineComponent, h, onMounted, type PropType, ref, Teleport } from 'vue'
+import { enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { VBtn } from 'vuetify/components'
 import useVuelidate from '@vuelidate/core'
 import { helpers, required } from '@vuelidate/validators'
@@ -8,6 +8,7 @@ import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialo
 import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
 import { useDialogForm } from '@/composables/dialog/useDialogForm'
 import { mountDialogPreset, overlayContent, pressEscape } from '@/__tests__/helpers/mountDialogPreset'
+import { withViewportWidth } from '@/__tests__/helpers/withViewportWidth'
 
 function deferred<T>() {
     let resolve!: (value: T) => void
@@ -73,6 +74,8 @@ function mountForm(data: Partial<Data> & Pick<Data, 'component'>) {
     }
     return { ...mounted, button, closeButton, form }
 }
+
+enableAutoUnmount(afterEach)
 
 describe('FormDialog', () => {
     afterEach(() => {
@@ -266,6 +269,52 @@ describe('FormDialog', () => {
             expect(document.activeElement?.classList.contains('content-input')).toBe(true)
         })
     })
+
+    it('keeps local state of registered content when the viewport crosses the breakpoint', async () => {
+        let mounts = 0
+        const LocalContent = defineComponent({
+            setup() {
+                const name = ref('')
+                useDialogForm(() => name.value)
+                onMounted(() => {
+                    mounts++
+                })
+                return () => h('input', {
+                    class: 'content-input',
+                    value: name.value,
+                    onInput: (event: Event) => {
+                        name.value = (event.target as HTMLInputElement).value
+                    },
+                })
+            },
+        })
+        const input = () => {
+            const element = document.body.querySelector<HTMLInputElement>('.content-input')
+            if (!element) {
+                throw new Error('content input not rendered')
+            }
+            return element
+        }
+        await withViewportWidth(1024, async () => {
+            const { resolve, reject } = mountForm({ component: LocalContent })
+            await flushPromises()
+            input().value = 'abc'
+            input().dispatchEvent(new Event('input', { bubbles: true }))
+            await flushPromises()
+            await withViewportWidth(360, async () => {
+                await flushPromises()
+                expect(document.body.querySelector('.ui-sheet')).not.toBeNull()
+                expect(input().value).toBe('abc')
+                expect(mounts).toBe(1)
+                expect(resolve).not.toHaveBeenCalled()
+                expect(reject).not.toHaveBeenCalled()
+            })
+            await flushPromises()
+            expect(document.body.querySelector('.ui-dialog')).not.toBeNull()
+            expect(input().value).toBe('abc')
+            expect(mounts).toBe(1)
+        })
+    })
 })
 
 const ModelContent = defineComponent({
@@ -390,21 +439,62 @@ describe('FormDialog with a v-model component', () => {
         expect(root?.hasAttribute('toolbar')).toBe(false)
     })
 
-    it('uses the md width by default and goes fullscreen on phones', async () => {
+    it('uses the md width by default and opens as a bottom sheet on phones', async () => {
         const first = mountModel()
         await flushPromises()
         expect(overlayContent().style.maxWidth).toBe('560px')
         first.wrapper.unmount()
         document.body.innerHTML = ''
 
-        const originalWidth = window.innerWidth
-        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 360 })
-        try {
+        await withViewportWidth(360, async () => {
             mountModel()
             await flushPromises()
-            expect(document.body.querySelector('.ui-dialog--fullscreen')).not.toBeNull()
-        } finally {
-            Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
-        }
+            expect(document.body.querySelector('.ui-sheet--content')).not.toBeNull()
+            expect(document.body.querySelector('.ui-sheet--fullscreen')).toBeNull()
+        })
+    })
+
+    it('moves the toolbar teleport into the new header when the viewport crosses the breakpoint', async () => {
+        let mounts = 0
+        const ToolbarContent = defineComponent({
+            props: {
+                toolbar: { type: Object as PropType<HTMLElement>, required: true },
+            },
+            setup(props) {
+                onMounted(() => {
+                    mounts++
+                })
+                return () => h('div', [
+                    h(Teleport, { to: props.toolbar }, [h('button', { type: 'button', class: 'tool' }, 'Tool')]),
+                    h('input', { class: 'content-input' }),
+                ])
+            },
+        })
+        await withViewportWidth(1024, async () => {
+            mountForm({ component: ToolbarContent })
+            await flushPromises()
+            expect(document.body.querySelector('.ui-dialog__header .ui-dialog__toolbar .tool')).not.toBeNull()
+            await withViewportWidth(360, async () => {
+                await flushPromises()
+                expect(document.body.querySelector('.ui-sheet__header .ui-dialog__toolbar .tool')).not.toBeNull()
+                expect(mounts).toBe(1)
+            })
+        })
+    })
+
+    it('keeps the typed value when the viewport crosses the breakpoint', async () => {
+        await withViewportWidth(1024, async () => {
+            const { type, input, resolve, reject } = mountModel()
+            await flushPromises()
+            type('abc')
+            await flushPromises()
+            await withViewportWidth(360, async () => {
+                await flushPromises()
+                expect(document.body.querySelector('.ui-sheet')).not.toBeNull()
+                expect(input().value).toBe('abc')
+                expect(resolve).not.toHaveBeenCalled()
+                expect(reject).not.toHaveBeenCalled()
+            })
+        })
     })
 })

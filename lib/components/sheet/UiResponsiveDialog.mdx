@@ -1,0 +1,248 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks'
+import * as ResponsiveDialogStories from './docs/stories/ResponsiveDialog.stories.ts'
+import * as ResponsiveMenuStories from './docs/stories/ResponsiveMenu.stories.ts'
+import * as ResponsiveInfoStories from './docs/stories/ResponsiveInfo.stories.ts'
+import * as BottomSheetStories from './docs/stories/BottomSheet.stories.ts'
+
+<Meta title="components/UiResponsiveDialog" />
+
+# UiResponsiveDialog and UiBottomSheet
+
+`UiResponsiveDialog` is the shell of every dialog preset of this library. Above Vuetify's `mobileBreakpoint` it renders a centred dialog, below it a bottom sheet. `UiBottomSheet` is that sheet on its own, for UIs that should be a sheet on every screen size. Both are exported from `@schwarzdavid/ui-kit` and need the plugin to be installed.
+
+The built-in `info()`, `confirm()` and `form()` presets already render through `UiResponsiveDialog`, so you only use it directly in your own [custom presets](?path=/docs/custom-presets--docs) or in templates that manage their own `v-model`.
+
+The stories below start with a phone viewport. Storybook only applies a viewport to the canvas, so open a story in its own tab (not inside this docs page) or resize the window below the breakpoint to see the sheet.
+
+## Stages
+
+A sheet has up to three stages:
+
+<table>
+    <thead>
+    <tr>
+        <th>Stage</th>
+        <th>Shows</th>
+        <th>Height</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>`preview`</td>
+        <td>Handle, title and the `preview` slot. Only exists when the `preview` slot is filled.</td>
+        <td>As tall as its content</td>
+    </tr>
+    <tr>
+        <td>`content`</td>
+        <td>The default slot instead of the preview</td>
+        <td>As tall as its content, at most `90dvh`</td>
+    </tr>
+    <tr>
+        <td>`fullscreen`</td>
+        <td>The default slot with a close button in the header. Only exists when `expandable` is `true`.</td>
+        <td>`100dvh`</td>
+    </tr>
+    </tbody>
+</table>
+
+The sheet opens in the first available stage, or in `stage` when it is one of them. The user changes the stage by dragging the handle or the header up or down, or by activating the handle (a button labelled with the `expand` or `collapse` message, depending on the stage). Dragging down from the lowest stage dismisses the sheet and emits `update:modelValue` with `false` and `close`, so `v-model` closes it; a parent that only binds `:model-value` decides itself whether to close. While `persistent` is set the sheet springs back instead. A downward drag inside a scrolled body scrolls the content first, and a mostly horizontal gesture never drags the sheet.
+
+The body of a stage scrolls while the `actions` stay visible below it.
+
+## UiResponsiveDialog
+
+<Story of={ResponsiveDialogStories.Default} />
+
+The demo uses the `preview` slot for a summary line, the default slot for the fields and the `actions` slot for Save and Cancel.
+
+```vue
+<UiResponsiveDialog v-model="open" v-model:stage="stage" title="Edit profile" form @submit="save">
+    <template #preview>
+        <p>{{ summary }}</p>
+    </template>
+    <VTextField v-model="name" label="Name" />
+    <VTextField v-model="email" label="Email address" type="email" />
+    <template #actions>
+        <VBtn variant="text" @click="open = false">Cancel</VBtn>
+        <VBtn variant="flat" color="primary" type="submit">Save</VBtn>
+    </template>
+</UiResponsiveDialog>
+```
+
+**Props**
+
+<table>
+    <thead>
+    <tr>
+        <th>Prop</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>modelValue *</td>
+        <td>boolean</td>
+        <td>Whether the dialog or sheet is open</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>title *</td>
+        <td>string</td>
+        <td>The title, rendered as the heading of the dialog and the sheet</td>
+        <td>---</td>
+    </tr>
+    <tr>
+        <td>translateTitle</td>
+        <td>boolean</td>
+        <td>If the title should be translated through vue-i18n</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>width</td>
+        <td>DialogWidth</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. The sheet ignores it.</td>
+        <td>`'md'`</td>
+    </tr>
+    <tr>
+        <td>closable</td>
+        <td>boolean</td>
+        <td>Shows the close icon (in the sheet only in the fullscreen stage)</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>persistent</td>
+        <td>boolean</td>
+        <td>Disables Escape, overlay click, the close icon and the swipe-down dismissal, e.g. while saving</td>
+        <td>`false`</td>
+    </tr>
+    <tr>
+        <td>form</td>
+        <td>boolean</td>
+        <td>Renders the layout as a form element. Submitting it (Enter or a submit button) emits `submit`.</td>
+        <td>`false`</td>
+    </tr>
+    <tr>
+        <td>expandable</td>
+        <td>boolean</td>
+        <td>Sheet only: whether the `fullscreen` stage exists. Set to `false` for menus and short content.</td>
+        <td>`true`</td>
+    </tr>
+    <tr>
+        <td>stage</td>
+        <td>SheetStage</td>
+        <td>Sheet only: the current stage, as `v-model:stage`. Ignored when it is not available (e.g. `preview` without a `preview` slot).</td>
+        <td>First available stage</td>
+    </tr>
+    </tbody>
+</table>
+
+**Emits**
+
+<table>
+    <thead>
+    <tr>
+        <th>Event</th>
+        <th>When</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>update:modelValue</td>
+        <td>`false` whenever `close` is emitted, so `v-model` alone closes the dialog or sheet</td>
+    </tr>
+    <tr>
+        <td>close</td>
+        <td>The user asks to close: Escape, overlay click (unless `dialog.closeOnOverlayClick` is `false`), the close icon or a swipe down. Never while `persistent`.</td>
+    </tr>
+    <tr>
+        <td>submit</td>
+        <td>The form was submitted. Only with `form`.</td>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>After the enter transition</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>After the leave transition, or right away when the breakpoint is crossed during it</td>
+    </tr>
+    <tr>
+        <td>update:stage</td>
+        <td>The sheet moved to another stage</td>
+    </tr>
+    </tbody>
+</table>
+
+**Slots**
+
+<table>
+    <thead>
+    <tr>
+        <th>Slot</th>
+        <th>Content</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>default</td>
+        <td>The body</td>
+    </tr>
+    <tr>
+        <td>preview</td>
+        <td>A compact summary shown in the `preview` stage of the sheet. The dialog does not render it.</td>
+    </tr>
+    <tr>
+        <td>header</td>
+        <td>Elements next to the title, e.g. a toolbar button</td>
+    </tr>
+    <tr>
+        <td>actions</td>
+        <td>The footer with the buttons, right-aligned</td>
+    </tr>
+    </tbody>
+</table>
+
+### Menus and short content
+
+Set `expandable` to `false` for content that never needs more room. Without a `preview` slot the sheet then has a single stage and cannot be dragged up; it can still be dismissed by swiping down.
+
+<Story of={ResponsiveMenuStories.Default} />
+
+```vue
+<UiResponsiveDialog v-model="open" title="Message actions" width="sm" :expandable="false">
+    <VList :items="items" item-title="title" item-value="id" @click:select="choose" />
+</UiResponsiveDialog>
+```
+
+### Information with a preview
+
+<Story of={ResponsiveInfoStories.Default} />
+
+## UiBottomSheet
+
+`UiBottomSheet` takes the same props (except `width`), slots and events. Its `title` is optional. Use it when the sheet should stay a sheet on desktop too. The demo shows the current `v-model:stage`.
+
+<Story of={BottomSheetStories.Default} />
+
+```vue
+<UiBottomSheet v-model="open" v-model:stage="stage" title="Filters">
+    <template #preview>
+        <p>3 filters active</p>
+    </template>
+    <VCheckbox v-model="unread" label="Unread only" hide-details />
+    <template #actions>
+        <VBtn variant="flat" color="primary" @click="open = false">Apply</VBtn>
+    </template>
+</UiBottomSheet>
+```
+
+## Things to know
+
+- The switch follows Vuetify's `display.mobileBreakpoint` through `useDisplay().mobile`. The shipped [Vuetify configuration](?path=/docs/vuetify-theme--docs) sets it to `'sm'`; without it Vuetify's default applies.
+- Content in the `header` slot gets `touch-action: none` on mobile, because the header is a drag area. Horizontal scrolling there does not pan.
+- Crossing the breakpoint while the dialog is open (rotating a phone, resizing a window) swaps the presentation without closing it. The default slot stays mounted and is moved into the new layout, so its local state survives, including content registered through `useDialogForm` in the Form preset. The `preview`, `header` and `actions` slots are rendered again, so keep their state in the parent. A focused field in the default slot loses focus when it is moved. `opened` fires again once the new presentation has entered; the Form preset uses it to focus its first field again.
+- The default slot is mounted when the dialog opens and unmounted after `closed`, so it starts fresh every time the dialog opens again.
+- On some phones the on-screen keyboard may cover the actions. This is not handled yet.
+- The labels of the handle and the close icon come from the `expand`, `collapse` and `close` [i18n messages](?path=/docs/configuration--docs).

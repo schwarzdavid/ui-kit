@@ -1,8 +1,37 @@
 <template>
-    <VDialog
+    <UiBottomSheet
+        v-if="mobile"
+        v-bind="attrs"
         :model-value="modelValue"
-        :max-width="fullscreen ? undefined : maxWidth"
-        :fullscreen="fullscreen"
+        :stage="stage"
+        :title="title"
+        :translate-title="translateTitle"
+        :expandable="expandable"
+        :closable="closable"
+        :persistent="persistent"
+        :form="form"
+        @update:model-value="value => emit('update:modelValue', value)"
+        @update:stage="value => emit('update:stage', value)"
+        @close="emit('close')"
+        @submit="emit('submit')"
+        @opened="emit('opened')"
+        @closed="onClosed">
+        <template v-if="slots.preview" #preview>
+            <slot name="preview" />
+        </template>
+        <template v-if="slots.header" #header>
+            <slot name="header" />
+        </template>
+        <div :ref="setBodyTarget" class="ui-responsive-dialog__slot" />
+        <template v-if="slots.actions" #actions>
+            <slot name="actions" />
+        </template>
+    </UiBottomSheet>
+    <VDialog
+        v-else
+        v-bind="attrs"
+        :model-value="modelValue"
+        :max-width="maxWidth"
         persistent
         no-click-animation
         :scrollable="false"
@@ -10,44 +39,34 @@
         @click:outside="onOverlayClick"
         @keydown.esc.stop.prevent="onEscape"
         @after-enter="emit('opened')"
-        @after-leave="emit('closed')">
+        @after-leave="onClosed">
         <VCard
             variant="flat"
             :border="false"
             :rounded="false"
-            class="ui-dialog"
-            :class="{ 'ui-dialog--fullscreen': fullscreen }">
+            class="ui-dialog">
             <component
                 :is="form ? 'form' : 'div'"
                 class="ui-dialog__layout"
                 v-bind="form ? { novalidate: true } : {}"
                 @submit.prevent="onSubmit">
                 <header class="ui-dialog__header">
-                    <VBtn
-                        v-if="closable && fullscreen"
-                        variant="text"
-                        density="comfortable"
-                        :icon="Icons.close"
-                        :aria-label="closeLabel"
-                        :disabled="persistent"
-                        class="ui-dialog__close"
-                        @click="emit('close')" />
                     <h2 class="ui-dialog__title">
                         <MaybeTranslation :content="title" :translate="translateTitle" />
                     </h2>
                     <slot name="header" />
                     <VBtn
-                        v-if="closable && !fullscreen"
+                        v-if="closable"
                         variant="text"
                         density="comfortable"
                         :icon="Icons.close"
                         :aria-label="closeLabel"
                         :disabled="persistent"
                         class="ui-dialog__close"
-                        @click="emit('close')" />
+                        @click="requestClose" />
                 </header>
                 <div class="ui-dialog__body">
-                    <slot />
+                    <div :ref="setBodyTarget" class="ui-responsive-dialog__slot" />
                 </div>
                 <footer v-if="slots.actions" class="ui-dialog__footer">
                     <slot name="actions" />
@@ -55,19 +74,27 @@
             </component>
         </VCard>
     </VDialog>
+    <Teleport v-if="bodyTarget" :to="bodyTarget">
+        <slot />
+    </Teleport>
 </template>
 
 <script lang="ts" setup>
-    import { computed, useSlots } from 'vue'
+    import { computed, shallowRef, useAttrs, useSlots, watch } from 'vue'
+    import type { ComponentPublicInstance } from 'vue'
     import { VBtn, VCard, VDialog } from 'vuetify/components'
     import { useDisplay } from 'vuetify'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
+    import UiBottomSheet from '@/components/sheet/UiBottomSheet.vue'
+    import type { SheetStage } from '@/components/sheet/types/SheetStage'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
     import { useMaybeTranslation } from '@/composables/internal/useMaybeTranslation'
     import { resolveDialogWidth } from '@/composables/dialog/internal/dialogWidths'
     import type { DialogWidth } from '@/composables/dialog/types/DialogWidth'
     import { Icons } from '@/internal/icons'
     import { usePluginContext } from '@/plugin/composables/usePluginContext'
+
+    defineOptions({ inheritAttrs: false })
 
     const props = withDefaults(defineProps<{
         modelValue: boolean
@@ -76,42 +103,85 @@
         width?: DialogWidth
         closable?: boolean
         persistent?: boolean
-        fullscreenOnMobile?: boolean
         form?: boolean
+        expandable?: boolean
+        stage?: SheetStage
     }>(), {
         translateTitle: true,
         width: 'md',
         closable: true,
         persistent: false,
-        fullscreenOnMobile: false,
         form: false,
+        expandable: true,
+        stage: undefined,
     })
 
     const emit = defineEmits<{
-        close: []
-        submit: []
-        opened: []
-        closed: []
+        'update:modelValue': [value: boolean]
+        'close': []
+        'submit': []
+        'opened': []
+        'closed': []
+        'update:stage': [stage: SheetStage]
+    }>()
+
+    defineSlots<{
+        default?: () => unknown
+        preview?: () => unknown
+        header?: () => unknown
+        actions?: () => unknown
     }>()
 
     const slots = useSlots()
+    const attrs = useAttrs()
     const { options } = usePluginContext()
-    const { xs } = useDisplay()
+    const { mobile } = useDisplay()
     const translate = useMaybeTranslation()
     const closeCta = useDialogCta(undefined, 'close')
     const closeLabel = computed(() => translate(closeCta.text, closeCta.translateText))
     const maxWidth = computed(() => resolveDialogWidth(props.width))
-    const fullscreen = computed(() => props.fullscreenOnMobile && xs.value)
+    const bodyTarget = shallowRef<HTMLElement | null>(null)
+
+    let leaving = false
+
+    function setBodyTarget(element: Element | ComponentPublicInstance | null): void {
+        if (element instanceof HTMLElement) {
+            bodyTarget.value = element
+        }
+    }
+
+    watch(() => props.modelValue, (open, wasOpen) => {
+        leaving = !open && wasOpen
+    })
+
+    watch(mobile, () => {
+        if (leaving && !props.modelValue) {
+            onClosed()
+        }
+    })
+
+    function onClosed(): void {
+        leaving = false
+        if (!props.modelValue) {
+            bodyTarget.value = null
+        }
+        emit('closed')
+    }
+
+    function requestClose(): void {
+        emit('update:modelValue', false)
+        emit('close')
+    }
 
     function onEscape(): void {
         if (!props.persistent) {
-            emit('close')
+            requestClose()
         }
     }
 
     function onOverlayClick(): void {
         if (options.dialog.closeOnOverlayClick && !props.persistent) {
-            emit('close')
+            requestClose()
         }
     }
 
@@ -123,8 +193,11 @@
 </script>
 
 <style lang="scss">
+.ui-responsive-dialog__slot {
+    display: contents;
+}
+
 .ui-dialog {
-    --ui-dialog-border: rgba(var(--v-border-color), var(--v-border-opacity));
     display: flex;
     flex-direction: column;
     max-height: calc(100dvh - 48px);
@@ -180,41 +253,5 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 16px 24px 20px;
-}
-
-.ui-dialog--fullscreen {
-    max-height: none;
-    height: 100%;
-    border-radius: 0;
-}
-
-.ui-dialog--fullscreen .ui-dialog__header {
-    align-items: center;
-    min-height: 56px;
-    padding: 8px;
-    border-bottom: 1px solid var(--ui-dialog-border);
-}
-
-.ui-dialog--fullscreen .ui-dialog__title {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.5rem;
-}
-
-.ui-dialog--fullscreen .ui-dialog__body {
-    padding: 16px;
-}
-
-.ui-dialog--fullscreen .ui-dialog__footer {
-    padding: 12px 16px;
-    border-top: 1px solid var(--ui-dialog-border);
-}
-
-.ui-dialog--fullscreen .ui-dialog__footer > .v-btn--variant-text {
-    display: none;
-}
-
-.ui-dialog--fullscreen .ui-dialog__footer > .v-btn--variant-flat {
-    flex: 1;
 }
 </style>

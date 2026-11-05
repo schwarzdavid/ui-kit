@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
 import type { PartialDeep } from 'type-fest'
 
-export type PluginI18nMessageKey = 'save' | 'cancel' | 'close' | 'yes' | 'no' | 'saveFailed' | 'unknownError'
+export type PluginI18nMessageKey = 'save' | 'cancel' | 'close' | 'yes' | 'no' | 'saveFailed' | 'unknownError' | 'expand' | 'collapse'
 
 export interface PluginI18nOptions {
     messages: Record<PluginI18nMessageKey, string>

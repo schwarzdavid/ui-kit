@@ -18,6 +18,8 @@ app.use(createUIKit({
 
 Each component is replaced as a whole; the ones you leave out stay the built-in presets.
 
+The built-in presets are all built on `UiResponsiveDialog`, which renders a dialog on desktop and a bottom sheet below `mobileBreakpoint`. Use it (or `UiBottomSheet` for a sheet on every screen size) as the building block of your own presets; see [UiResponsiveDialog](?path=/docs/components-uiresponsivedialog--docs).
+
 ## Demo
 
 The demo registers a bottom-sheet confirm dialog and a pill-shaped toast.

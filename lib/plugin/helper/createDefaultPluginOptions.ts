@@ -26,6 +26,8 @@ export const createDefaultPluginOptions = (): PluginOptions => ({
             save: 'action.save',
             saveFailed: 'dialog.saveFailed',
             unknownError: 'error.unknown',
+            expand: 'action.expand',
+            collapse: 'action.collapse',
         },
     },
     components: {

@@ -20,6 +20,12 @@ describe('resolvePluginOptions', () => {
         expect(options.loading).toEqual({ delay: 2000, overlay: false })
     })
 
+    it('ships default keys for the sheet handle labels', () => {
+        const options = resolvePluginOptions()
+        expect(options.i18n.messages.expand).toBe('action.expand')
+        expect(options.i18n.messages.collapse).toBe('action.collapse')
+    })
+
     it('closes dialogs on overlay clicks by default and lets the option disable it', () => {
         expect(resolvePluginOptions().dialog.closeOnOverlayClick).toBe(true)
         expect(resolvePluginOptions({ dialog: { closeOnOverlayClick: false } }).dialog.closeOnOverlayClick).toBe(false)

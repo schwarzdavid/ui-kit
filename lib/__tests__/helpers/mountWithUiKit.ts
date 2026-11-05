@@ -1,6 +1,6 @@
 import { type ComponentMountingOptions, mount } from '@vue/test-utils'
 import type { Component } from 'vue'
-import { createVuetify } from 'vuetify'
+import { createVuetify, type VuetifyOptions } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import { createUIKit } from '@/plugin/createUIKit'
 import type { CreateUIKitOptions } from '@/plugin/types/PluginOptions'
@@ -24,15 +24,16 @@ vi.stubGlobal('ResizeObserver', class {
 type UiKitMountingOptions = Pick<ComponentMountingOptions<Component>, 'props' | 'slots'> & {
     uiKit?: CreateUIKitOptions
     provide?: Record<symbol, unknown>
+    vuetify?: VuetifyOptions
 }
 
-export function mountWithUiKit(component: Component, { uiKit, provide, ...rest }: UiKitMountingOptions = {}) {
+export function mountWithUiKit(component: Component, { uiKit, provide, vuetify, ...rest }: UiKitMountingOptions = {}) {
     return mount(component, {
         ...rest,
         attachTo: document.body,
         global: {
             plugins: [
-                createVuetify(),
+                createVuetify({ ...vuetify, display: { mobileBreakpoint: 'sm', ...vuetify?.display } }),
                 createI18n({ legacy: false, locale: 'en', messages: { en: {} } }),
                 createUIKit(uiKit),
             ],

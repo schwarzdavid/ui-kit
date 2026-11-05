@@ -1,6 +1,9 @@
 import UiKitOutlet from '@/components/UiKitOutlet.vue'
 
 export { UiKitOutlet }
+export { default as UiBottomSheet } from '@/components/sheet/UiBottomSheet.vue'
+export { default as UiResponsiveDialog } from '@/components/sheet/UiResponsiveDialog.vue'
+export type { SheetStage } from '@/components/sheet/types/SheetStage'
 export * from '@/composables/dialog/useDialog'
 export * from '@/composables/dialog/useDialogEntry'
 export * from '@/composables/dialog/useDialogForm'

@@ -1,18 +1,17 @@
 <template>
-    <DialogFrame
+    <UiResponsiveDialog
         :model-value="open"
         :title="data.title"
         :translate-title="data.translateTitle"
         :width="data.width ?? 'md'"
         :persistent="loading || submitting"
-        fullscreen-on-mobile
         form
         @close="closeDialog"
         @submit="submit"
         @opened="focusFirstInput"
         @closed="settle">
         <template #header>
-            <div ref="toolbar" class="ui-dialog__toolbar" />
+            <div :ref="setToolbar" class="ui-dialog__toolbar" />
         </template>
         <VAlert
             v-if="error !== null"
@@ -33,14 +32,14 @@
                 <MaybeTranslation :content="saveCta.text" :translate="saveCta.translateText" />
             </VBtn>
         </template>
-    </DialogFrame>
+    </UiResponsiveDialog>
 </template>
 
 <script lang="ts" setup generic="T, R = T, C extends Component = Component">
-    import { type Component, computed, provide, ref, shallowRef, toValue, useTemplateRef } from 'vue'
+    import { type Component, type ComponentPublicInstance, computed, provide, ref, shallowRef, toValue, useTemplateRef } from 'vue'
     import { VAlert, VBtn } from 'vuetify/components'
     import useVuelidate from '@vuelidate/core'
-    import DialogFrame from '@/composables/dialog/components/dialog/internal/DialogFrame.vue'
+    import UiResponsiveDialog from '@/components/sheet/UiResponsiveDialog.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import type { FormDialogBaseProps } from '@/composables/dialog/presets/FormDialogProps'
     import type { DialogFormFinish } from '@/composables/dialog/types/DialogFormContext'
@@ -66,7 +65,7 @@
     const error = ref<string | null>(null)
     const value = ref<T | null>(toValue(data.initialValue) ?? null)
     const finish = shallowRef<DialogFormFinish<T> | null>(null)
-    const toolbar = useTemplateRef<HTMLDivElement>('toolbar')
+    const toolbar = shallowRef<HTMLDivElement | null>(null)
     const content = useTemplateRef<HTMLDivElement>('content')
     const v = useVuelidate()
     const { loading, action } = useLoading(performAction)
@@ -87,6 +86,12 @@
     })
 
     let resolveValue: unknown = null
+
+    function setToolbar(element: Element | ComponentPublicInstance | null): void {
+        if (element instanceof HTMLDivElement) {
+            toolbar.value = element
+        }
+    }
 
     provide(DIALOG_FORM_INJECTION_KEY, {
         register(handler: DialogFormFinish<T>) {

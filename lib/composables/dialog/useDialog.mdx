@@ -57,7 +57,7 @@ Each method is rendered by a preset component that you can [replace](#replacing-
 
 ## Layout and behaviour
 
-Every dialog shares one shell: a title, a scrolling body and a footer with the buttons in the order tertiary, then primary. Three widths exist, `sm` (440px), `md` (560px) and `lg` (720px); every method accepts a `width` option of type `DialogWidth` (`'sm' | 'md' | 'lg' | number`). Form dialogs go full screen below Vuetify's `sm` breakpoint. Escape and a click on the overlay behave like the cancel button; set the plugin option `dialog.closeOnOverlayClick` to `false` to keep dialogs open on overlay clicks (see [Configuration](?path=/docs/configuration--docs)).
+Every dialog shares one shell: a title, a scrolling body and a footer with the buttons in the order tertiary, then primary. Three widths exist, `sm` (440px), `md` (560px) and `lg` (720px); every method accepts a `width` option of type `DialogWidth` (`'sm' | 'md' | 'lg' | number`). Below Vuetify's `mobileBreakpoint` (`'sm'` in the shipped configuration) every dialog renders as a bottom sheet instead; see [UiResponsiveDialog](?path=/docs/components-uiresponsivedialog--docs). Form dialogs start as a sheet that can be dragged up to full screen. Escape and a click on the overlay behave like the cancel button; set the plugin option `dialog.closeOnOverlayClick` to `false` to keep dialogs open on overlay clicks (see [Configuration](?path=/docs/configuration--docs)).
 
 All queued dialogs are rendered at once, the newest on top. A dialog can therefore open another one, e.g. a confirm from an `additionalCta` action of an info dialog or from the `action` of a form dialog, and the first one stays open underneath until it is closed itself.
 
@@ -612,7 +612,7 @@ Cancel, the close icon and Escape resolve the Promise with `null`. With `require
     <tr>
         <td>width</td>
         <td>DialogWidth</td>
-        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. Form dialogs always go full screen on phones.</td>
+        <td>Width of the dialog: `'sm'`, `'md'`, `'lg'` or a number of pixels. Below `mobileBreakpoint` the dialog is a bottom sheet and ignores the width.</td>
         <td>`'md'`</td>
     </tr>
     <tr>
@@ -911,7 +911,7 @@ A component that declares `toolbar` can teleport elements into the dialog header
     }>()
 
     const model = defineModel<number>()
-    const { smAndDown: mobile } = useDisplay()
+    const { mobile } = useDisplay()
 </script>
 ```
 
