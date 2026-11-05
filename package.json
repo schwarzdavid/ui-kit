@@ -60,7 +60,10 @@
     },
     "./vuetify/settings.scss": "./dist/vuetify/settings.scss",
     "./vuetify/settings": "./dist/vuetify/settings.scss",
-    "./styles": "./dist/ui-kit.css"
+    "./styles": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/ui-kit.css"
+    }
   },
   "peerDependencies": {
     "@vuelidate/core": "^2.0.0",

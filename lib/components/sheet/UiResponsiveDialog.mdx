@@ -222,16 +222,22 @@ Set `expandable` to `false` for content that never needs more room. Without a `p
 
 ## UiBottomSheet
 
-`UiBottomSheet` takes the same props (except `width`), slots and events. Its `title` is optional. Use it when the sheet should stay a sheet on desktop too. The demo shows the current `v-model:stage`.
+`UiBottomSheet` takes the same props (except `width`), slots and events. Its `title` is optional. Use it when the sheet should stay a sheet on desktop too. Its body has no horizontal padding, so lists and dividers reach the edges of the sheet; wrap text and form fields in a `VCardText` or add your own padding. `UiResponsiveDialog` keeps the padding on mobile. The demo shows the current `v-model:stage`.
 
 <Story of={BottomSheetStories.Default} />
 
 ```vue
 <UiBottomSheet v-model="open" v-model:stage="stage" title="Filters">
     <template #preview>
-        <p>3 filters active</p>
+        <VCardText class="py-0">{{ filters.length }} filters active</VCardText>
     </template>
-    <VCheckbox v-model="unread" label="Unread only" hide-details />
+    <VList v-model:selected="filters" select-strategy="leaf" lines="one">
+        <VListItem v-for="filter in options" :key="filter.value" :value="filter.value" :title="filter.title">
+            <template #append="{ isSelected }">
+                <VCheckboxBtn :model-value="isSelected" tabindex="-1" />
+            </template>
+        </VListItem>
+    </VList>
     <template #actions>
         <VBtn variant="flat" color="primary" @click="open = false">Apply</VBtn>
     </template>

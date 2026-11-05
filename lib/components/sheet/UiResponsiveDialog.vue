@@ -17,12 +17,14 @@
         @opened="emit('opened')"
         @closed="onClosed">
         <template v-if="slots.preview" #preview>
-            <slot name="preview" />
+            <div class="ui-responsive-dialog__sheet-section">
+                <slot name="preview" />
+            </div>
         </template>
         <template v-if="slots.header" #header>
             <slot name="header" />
         </template>
-        <div :ref="setBodyTarget" class="ui-responsive-dialog__slot" />
+        <div :ref="setBodyTarget" class="ui-responsive-dialog__sheet-section" />
         <template v-if="slots.actions" #actions>
             <slot name="actions" />
         </template>
@@ -195,6 +197,13 @@
 <style lang="scss">
 .ui-responsive-dialog__slot {
     display: contents;
+}
+
+.ui-responsive-dialog__sheet-section {
+    display: grid;
+    align-content: start;
+    gap: 20px;
+    padding: 0 24px;
 }
 
 .ui-dialog {

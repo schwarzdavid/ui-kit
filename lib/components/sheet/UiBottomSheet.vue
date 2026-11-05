@@ -468,7 +468,7 @@
 .ui-sheet__body {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 16px 24px 8px;
+    padding: 16px 0 8px;
     overflow-y: auto;
     overscroll-behavior: contain;
     font-size: 0.875rem;

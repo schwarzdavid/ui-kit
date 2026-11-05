@@ -156,6 +156,15 @@ describe('UiResponsiveDialog', () => {
         })
     })
 
+    it('pads the default and preview slots inside the sheet on mobile', async () => {
+        await withViewportWidth(360, async () => {
+            mountFrame({}, { preview: '<p class="teaser">Teaser</p>' })
+            await flushPromises()
+            expect(document.body.querySelector('.ui-sheet__preview > .ui-responsive-dialog__sheet-section .teaser')).not.toBeNull()
+            expect(document.body.querySelector('.ui-sheet__content > .ui-responsive-dialog__sheet-section .body')).not.toBeNull()
+        })
+    })
+
     it('renders a dialog at or above the mobile breakpoint', async () => {
         await withViewportWidth(1024, async () => {
             mountFrame()

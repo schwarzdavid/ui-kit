@@ -16,6 +16,11 @@ function emitVuetifySettings(): Plugin {
                 fileName: 'vuetify/settings.scss',
                 source: readFileSync(resolve(import.meta.dirname, 'lib/vuetify/settings.scss'), 'utf8'),
             })
+            this.emitFile({
+                type: 'asset',
+                fileName: 'styles.d.ts',
+                source: 'export {}\n',
+            })
         },
     }
 }

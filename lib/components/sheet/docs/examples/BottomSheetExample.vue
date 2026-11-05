@@ -6,11 +6,19 @@
         v-model:stage="stage"
         title="Filters">
         <template #preview>
-            <p>3 filters active</p>
+            <VCardText class="py-0">{{ filters.length }} filters active</VCardText>
         </template>
-        <VCheckbox v-model="unread" label="Unread only" hide-details />
-        <VCheckbox v-model="attachments" label="With attachments" hide-details />
-        <VCheckbox v-model="starred" label="Starred" hide-details />
+        <VList v-model:selected="filters" select-strategy="leaf" lines="one">
+            <VListItem
+                v-for="filter in options"
+                :key="filter.value"
+                :value="filter.value"
+                :title="filter.title">
+                <template #append="{ isSelected }">
+                    <VCheckboxBtn :model-value="isSelected" tabindex="-1" />
+                </template>
+            </VListItem>
+        </VList>
         <template #actions>
             <VBtn variant="flat" color="primary" @click="open = false">Apply</VBtn>
         </template>
@@ -19,13 +27,17 @@
 
 <script lang="ts" setup>
     import { ref } from 'vue'
-    import { VBtn, VCheckbox } from 'vuetify/components'
+    import { VBtn, VCardText, VCheckboxBtn, VList, VListItem } from 'vuetify/components'
     import UiBottomSheet from '@/components/sheet/UiBottomSheet.vue'
     import type { SheetStage } from '@/components/sheet/types/SheetStage'
 
+    const options = [
+        { title: 'Unread only', value: 'unread' },
+        { title: 'With attachments', value: 'attachments' },
+        { title: 'Starred', value: 'starred' },
+    ]
+
     const open = ref(false)
     const stage = ref<SheetStage>('preview')
-    const unread = ref(true)
-    const attachments = ref(true)
-    const starred = ref(true)
+    const filters = ref<string[]>(['unread', 'attachments', 'starred'])
 </script>
