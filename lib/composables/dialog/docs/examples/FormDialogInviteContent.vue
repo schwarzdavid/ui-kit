@@ -10,13 +10,12 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue'
     import useVuelidate from '@vuelidate/core'
     import { VTextField } from 'vuetify/components'
     import { email, required } from '@/composables/vuelidate/validators'
-    import { useDialogForm } from '@/composables/dialog/useDialogForm'
+    import { useFormDialog } from '@/composables/dialog/useFormDialog'
 
-    const state = ref({ email: '' })
-    const v = useVuelidate({ email: { required, email } }, state)
-    const { loading } = useDialogForm(() => state.value.email.trim())
+    const model = defineModel<string>({ required: true })
+    const v = useVuelidate({ email: { required, email } }, { email: model })
+    const { loading } = useFormDialog()
 </script>

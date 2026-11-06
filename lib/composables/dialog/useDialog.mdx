@@ -500,46 +500,20 @@ Form dialogs render a component of your own inside a dialog with a cancel and a 
 
 ### How your component hands over its value
 
-The dialog owns the frame, the buttons and the Promise; your component owns the content. There are two ways for the component to tell the dialog what to resolve with, and they can be combined:
+The dialog owns the frame, the buttons and the Promise; your component owns the content. The component hands over its value through a v-model: `initialValue` arrives as `modelValue`, and the dialog resolves with the model value at the moment of saving (or passes it to `action`). Declare it with `defineModel<T>()`; for a form with several fields, `T` is an object and Vuelidate validates the model directly.
 
-<table>
-    <thead>
-    <tr>
-        <th></th>
-        <th>v-model</th>
-        <th>`useDialogForm(finish)`</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>In your component</td>
-        <td>`const model = defineModel<T>()`</td>
-        <td>`useDialogForm(() => buildValue())`</td>
-    </tr>
-    <tr>
-        <td>Start value</td>
-        <td>`initialValue` arrives as `modelValue`</td>
-        <td>Your component sets up its own state (pass data through `props`)</td>
-    </tr>
-    <tr>
-        <td>Resolves with</td>
-        <td>The model value at the moment of saving</td>
-        <td>Whatever `finish()` returns; it may be async and may throw</td>
-    </tr>
-    <tr>
-        <td>Extras</td>
-        <td>`required: true` disables save while the value is empty</td>
-        <td>`submit()` to save from inside (e.g. on double-click) and `loading` to disable fields</td>
-    </tr>
-    <tr>
-        <td>Best for</td>
-        <td>Single fields and pickers whose value is the state</td>
-        <td>Forms with several fields, values that need mapping, async preparation</td>
-    </tr>
-    </tbody>
-</table>
+To work with the dialog from inside, call `useFormDialog()` anywhere in your component tree. It returns `submit()` to save exactly like the save button (e.g. on double-click or from a nested form), `close()` to cancel, `onFinish()` to run code before saving and `loading` to disable fields while saving.
 
-When a component does both, `finish()` wins. That is the way to use a model for the start value and still call `submit()`, as the [folder picker](#picker-that-submits-on-double-click) does.
+`onFinish(handler)` and its shortcut `onDialogFinish(handler)` register a handler that runs on every save after validation and before `action`. It may be async. Return `false` to cancel the save and keep the dialog open; throw to show the error in the dialog. Both work like `onBeforeRouteLeave` of vue-router: call them during `setup()` of any component inside the dialog, and the handler is removed when that component unmounts.
+
+```ts
+const { submit, close, loading } = useFormDialog()
+
+onDialogFinish(async () => {
+    await uploadPendingFiles()
+    return model.value.name !== 'admin'
+})
+```
 
 **What the dialog passes to your component**
 
@@ -577,10 +551,10 @@ Undeclared props are never passed, so nothing leaks onto your root element as an
 The save button, Enter in any field (the body is a `<form>`) and `submit()` all start the same sequence:
 
 1. `useVuelidate().$validate()` runs and collects every Vuelidate instance created inside your component. If anything is invalid, the dialog stays open and your fields show their errors.
-2. The value is taken from `finish()`, or from the model when no `finish` is registered.
-3. `action(value)` runs if provided; the dialog resolves with its result, otherwise with the value.
+2. Every handler registered with `onFinish` or `onDialogFinish` runs in the order of registration; each may be async. As soon as one returns `false`, the sequence stops and the dialog stays open without an error.
+3. `action(value)` runs with the model value if provided; the dialog resolves with its result, otherwise with the model value.
 
-While steps 2 and 3 run, the save button shows its loading state, cancel and the close icon are disabled and Escape is ignored. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If `finish()` or `action` throws, the dialog stays open and shows an error alert at the top of the body with the `saveFailed` message as title and the error's message as text (or the `unknownError` message when the thrown value carries none); the user's input is kept.
+While steps 2 and 3 run, the save button shows its loading state, cancel and the close icon are disabled and Escape is ignored. The busy state lasts at least `loading.delay` milliseconds of the plugin options. If a finish handler or `action` throws, the dialog stays open and shows an error alert at the top of the body with the `saveFailed` message as title and the error's message as text (or the `unknownError` message when the thrown value carries none); the user's input is kept.
 
 **What happens on close**
 
@@ -644,7 +618,7 @@ Cancel, the close icon and Escape resolve the Promise with `null`. With `require
     <tr>
         <td>component *</td>
         <td>Component</td>
-        <td>The component to render. It either declares a model of type `T` or calls `useDialogForm(finish)` with a function returning `T` (or a Promise of it). It may declare a `toolbar: HTMLElement` prop to place elements in the dialog header with &lt;teleport&gt;.</td>
+        <td>The component to render. It declares a model of type `T` (`defineModel<T>()`) and may call `useFormDialog()` or `onDialogFinish()`. It may declare a `toolbar: HTMLElement` prop to place elements in the dialog header with &lt;teleport&gt;.</td>
         <td>---</td>
     </tr>
     <tr>
@@ -668,7 +642,7 @@ Cancel, the close icon and Escape resolve the Promise with `null`. With `require
     <tr>
         <td>required</td>
         <td>Required extends boolean</td>
-        <td>Reject the Promise instead of resolving with `null` when the dialog is closed without a result. For a v-model component without `finish`, the save button is disabled while the model value is empty.</td>
+        <td>Reject the Promise instead of resolving with `null` when the dialog is closed without a result. The save button is disabled while the model value is empty.</td>
         <td>`false`</td>
     </tr>
     </tbody>
@@ -699,7 +673,7 @@ Note: Properties with * are required
     </tbody>
 </table>
 
-**DialogFormContext** (returned by `useDialogForm`)
+**FormDialogContext** (returned by `useFormDialog`)
 <table>
     <thead>
     <tr>
@@ -715,9 +689,19 @@ Note: Properties with * are required
         <td>Submits the dialog, exactly like the save button</td>
     </tr>
     <tr>
+        <td>close()</td>
+        <td>() =&gt; void</td>
+        <td>Closes the dialog, exactly like the cancel button; ignored while saving</td>
+    </tr>
+    <tr>
+        <td>onFinish(handler)</td>
+        <td>(handler: FormDialogFinishHandler) =&gt; () =&gt; void</td>
+        <td>Runs `handler` on every save after validation and before `action`; `onDialogFinish(handler)` is the same as a shortcut. `FormDialogFinishHandler` is `() => Promisable<boolean | undefined>`; returning `false` cancels the save and keeps the dialog open. Returns a function that removes the handler; it is removed automatically when your component unmounts</td>
+    </tr>
+    <tr>
         <td>loading</td>
         <td>Readonly&lt;Ref&lt;boolean&gt;&gt;</td>
-        <td>True while `finish()` and `action` run</td>
+        <td>True while the finish handlers and `action` run</td>
     </tr>
     </tbody>
 </table>
@@ -788,7 +772,7 @@ try {
 
 #### Picker that submits on double-click
 
-The model brings the start value in, `useDialogForm` adds `submit()` and a Vuelidate rule blocks saving without a selection. Since `finish` is registered, it decides the result.
+The model brings the start value in and is the result, `useFormDialog` adds `submit()` and a Vuelidate rule blocks saving without a selection.
 
 <Story of={FormDialogMoveStories.Default} />
 
@@ -801,7 +785,7 @@ The model brings the start value in, `useDialogForm` adds `submit()` and a Vueli
 <script lang="ts" setup>
     import { computed } from 'vue'
     import useVuelidate from '@vuelidate/core'
-    import { useDialogForm } from '@schwarzdavid/ui-kit'
+    import { useFormDialog } from '@schwarzdavid/ui-kit'
     import { required } from '@schwarzdavid/ui-kit/validators'
 
     defineProps<{
@@ -814,18 +798,22 @@ The model brings the start value in, `useDialogForm` adds `submit()` and a Vueli
         set: (value: string[]) => { model.value = value[0] ?? null },
     })
     const v = useVuelidate({ model: { required } }, { model })
-    const { submit } = useDialogForm(() => model.value)
+    const { submit } = useFormDialog()
 </script>
 ```
 
-#### Validated form
+#### Validated form with a finish check
 
-A form with several fields keeps its own state and hands over the value through `finish`. Try "New profile" in the demo at the top of this section.
+A form with several fields uses an object as its model; Vuelidate validates the model directly. `onDialogFinish` runs a server-side check before the dialog closes and cancels the save when the name is taken. Try "New profile" in the demo at the top of this section and enter "admin".
 
 ```vue
 <template>
     <div class="d-flex flex-column ga-5">
-        <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error" />
+        <VTextField
+            v-model="v.name.$model"
+            label="Name"
+            :error="v.name.$error || taken"
+            :error-messages="taken ? 'This name is already taken.' : undefined" />
         <VTextField v-model.number="v.age.$model" label="Age" type="number" :error="v.age.$error" />
         <VDateInput v-model="v.date.$model" label="Date" :error="v.date.$error" />
     </div>
@@ -834,35 +822,37 @@ A form with several fields keeps its own state and hands over the value through 
 <script lang="ts" setup>
     import { ref } from 'vue'
     import useVuelidate from '@vuelidate/core'
-    import { useDialogForm } from '@schwarzdavid/ui-kit'
+    import { onDialogFinish } from '@schwarzdavid/ui-kit'
     import { maxLength, minLength, required } from '@schwarzdavid/ui-kit/validators'
 
-    const state = ref<{ name: string, age: number | null, date: Date }>({
-        name: '',
-        age: null,
-        date: new Date(),
-    })
+    const model = defineModel<{ name: string, age: number | null, date: Date }>({ required: true })
 
     const v = useVuelidate({
         name: { required, minLength: minLength(5), maxLength: maxLength(8) },
         age: { required },
         date: { required },
-    }, state)
+    }, model)
 
-    useDialogForm(() => state.value.name)
+    const taken = ref(false)
+
+    onDialogFinish(async () => {
+        taken.value = await api.isNameTaken(model.value.name)
+        return !taken.value
+    })
 </script>
 ```
 
 ```ts
-const name = await dialog.form<string>({
+const profile = await dialog.form({
     title: 'New profile',
     component: FormDialogContent,
+    initialValue: { name: '', age: null, date: new Date() },
 })
 ```
 
 #### Saving with an action
 
-Pass an `action` to persist the value before the dialog closes. The Promise resolves with the action's result, so `T` (the form value) and `R` (the saved entity) differ. A thrown error stays inside the dialog and the user can correct the input; use an address containing "taken" to see it. The `loading` ref from `useDialogForm` disables the field while saving.
+Pass an `action` to persist the value before the dialog closes. The Promise resolves with the action's result, so `T` (the form value) and `R` (the saved entity) differ. A thrown error stays inside the dialog and the user can correct the input; use an address containing "taken" to see it. The `loading` ref from `useFormDialog` disables the field while saving.
 
 <Story of={FormDialogInviteStories.Default} />
 
@@ -872,14 +862,13 @@ Pass an `action` to persist the value before the dialog closes. The Promise reso
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue'
     import useVuelidate from '@vuelidate/core'
-    import { useDialogForm } from '@schwarzdavid/ui-kit'
+    import { useFormDialog } from '@schwarzdavid/ui-kit'
     import { email, required } from '@schwarzdavid/ui-kit/validators'
 
-    const state = ref({ email: '' })
-    const v = useVuelidate({ email: { required, email } }, state)
-    const { loading } = useDialogForm(() => state.value.email.trim())
+    const model = defineModel<string>({ required: true })
+    const v = useVuelidate({ email: { required, email } }, { email: model })
+    const { loading } = useFormDialog()
 </script>
 ```
 
@@ -887,7 +876,8 @@ Pass an `action` to persist the value before the dialog closes. The Promise reso
 const invitation = await dialog.form({
     title: 'Invite member',
     component: FormDialogInviteContent,
-    action: (address: string) => api.sendInvitation(address),
+    initialValue: '',
+    action: (address: string) => api.sendInvitation(address.trim()),
 })
 ```
 
@@ -1011,6 +1001,6 @@ Things to keep in mind:
 - A preset replaces the built-in one for the whole app; the keys you leave out keep their built-in presets. The callers do not change.
 - Call `resolve` or `reject` after the leave transition, so the dialog animates out before it is removed from the queue.
 - Honour the options your callers use, e.g. `translateTitle` (render user strings through vue-i18n), `width`, `permanent` or the CTA texts from `i18n.messages`.
-- A custom form preset renders the caller's `component` with `data.props`. `useDialogForm()` only works inside the built-in form preset, so a replacement supports v-model components only.
+- A custom form preset renders the caller's `component` with `data.props`. `useFormDialog()` only works inside the built-in form preset, so a replacement supports v-model components only.
 
 See [Custom presets](?path=/docs/custom-presets--docs) for the complete `useDialogEntry()` contract and the toast counterpart.

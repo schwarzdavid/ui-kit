@@ -66,7 +66,7 @@ const { data, resolve, reject } = useDialogEntry<ConfirmDialogProps, boolean>()
     </tbody>
 </table>
 
-Call `resolve` or `reject` after your leave transition so the dialog animates out before it is removed. The component is mounted when the entry is queued and unmounted as soon as it settles. A form dialog replacement must also `provide` the form context that `useDialogForm()` expects; copy the built-in preset as the starting point.
+Call `resolve` or `reject` after your leave transition so the dialog animates out before it is removed. The component is mounted when the entry is queued and unmounted as soon as it settles. A form dialog replacement must also `provide` the form context that `useFormDialog()` expects; copy the built-in preset as the starting point.
 
 ```vue
 <template>

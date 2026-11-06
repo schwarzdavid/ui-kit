@@ -1,6 +1,8 @@
 <template>
     <VBottomSheet
         :model-value="modelValue"
+        width="100%"
+        max-width="100%"
         persistent
         no-click-animation
         :scrollable="false"

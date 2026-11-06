@@ -42,8 +42,8 @@
     import UiResponsiveDialog from '@/components/sheet/UiResponsiveDialog.vue'
     import MaybeTranslation from '@/components/internal/MaybeTranslation.vue'
     import type { FormDialogBaseProps } from '@/composables/dialog/presets/FormDialogProps'
-    import type { DialogFormFinish } from '@/composables/dialog/types/DialogFormContext'
-    import { DIALOG_FORM_INJECTION_KEY } from '@/composables/dialog/constants/injectionKeys'
+    import type { FormDialogFinishHandler } from '@/composables/dialog/types/FormDialogContext'
+    import { FORM_DIALOG_INJECTION_KEY } from '@/composables/dialog/constants/injectionKeys'
     import { declaresProp } from '@/composables/dialog/internal/declaresProp'
     import { isEmptyValue } from '@/composables/dialog/internal/isEmptyValue'
     import { useDialogCta } from '@/composables/dialog/internal/useDialogCta'
@@ -64,13 +64,12 @@
     const open = ref(true)
     const error = ref<string | null>(null)
     const value = ref<T | null>(toValue(data.initialValue) ?? null)
-    const finish = shallowRef<DialogFormFinish<T> | null>(null)
     const toolbar = shallowRef<HTMLDivElement | null>(null)
     const content = useTemplateRef<HTMLDivElement>('content')
     const v = useVuelidate()
     const { loading, action } = useLoading(performAction)
     const submitting = ref<boolean>(false)
-    const isSaveDisabled = computed(() => !!data.required && finish.value === null && isEmptyValue(value.value))
+    const isSaveDisabled = computed(() => !!data.required && isEmptyValue(value.value))
     const componentProps = computed(() => {
         const props: Record<string, unknown> = { ...data.props }
         if (declaresProp(data.component, 'modelValue')) {
@@ -85,6 +84,8 @@
         return props
     })
 
+    const finishHandlers = new Set<FormDialogFinishHandler>()
+
     let resolveValue: unknown = null
 
     function setToolbar(element: Element | ComponentPublicInstance | null): void {
@@ -93,11 +94,15 @@
         }
     }
 
-    provide(DIALOG_FORM_INJECTION_KEY, {
-        register(handler: DialogFormFinish<T>) {
-            finish.value = handler
+    provide(FORM_DIALOG_INJECTION_KEY, {
+        addFinishHandler(handler: FormDialogFinishHandler) {
+            finishHandlers.add(handler)
+            return () => {
+                finishHandlers.delete(handler)
+            }
         },
         submit,
+        close: closeDialog,
         loading,
     })
 
@@ -120,7 +125,12 @@
     }
 
     async function performAction(): Promise<void> {
-        const result = finish.value ? await finish.value() : value.value
+        for (const handler of [...finishHandlers]) {
+            if (await handler() === false) {
+                return
+            }
+        }
+        const result = value.value
         resolveValue = data.action ? await data.action(result) : result
         open.value = false
     }

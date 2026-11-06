@@ -65,6 +65,17 @@ describe('UiBottomSheet', () => {
         document.body.innerHTML = ''
     })
 
+    it('spans the full width even when the app sets VDialog or VBottomSheet width defaults', async () => {
+        mountWithUiKit(UiBottomSheet, {
+            props: { modelValue: true, title: 'Sheet title' },
+            slots: { default: '<p class="body">Body</p>' },
+            vuetify: { defaults: { VDialog: { width: 400, maxWidth: 500 }, VBottomSheet: { width: 400, maxWidth: 500 } } },
+        })
+        await flushPromises()
+        expect(overlayContent().style.width).toBe('100%')
+        expect(overlayContent().style.maxWidth).toBe('100%')
+    })
+
     it('opens in the preview stage when a preview slot is given', async () => {
         mountSheet({}, { preview: '<p class="teaser">Teaser</p>' })
         await flushPromises()

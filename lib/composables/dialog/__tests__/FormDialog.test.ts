@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, onMounted, type PropType, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, onMounted, type PropType, ref, Teleport } from 'vue'
 import { enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { VBtn } from 'vuetify/components'
 import useVuelidate from '@vuelidate/core'
 import { helpers, required } from '@vuelidate/validators'
 import FormDialog from '@/composables/dialog/components/dialog/presets/FormDialog.vue'
 import type { FormDialogProps } from '@/composables/dialog/presets/FormDialogProps'
-import { useDialogForm } from '@/composables/dialog/useDialogForm'
+import { useFormDialog } from '@/composables/dialog/useFormDialog'
+import { onDialogFinish } from '@/composables/dialog/onDialogFinish'
+import type { FormDialogFinishHandler } from '@/composables/dialog/types/FormDialogContext'
 import { mountDialogPreset, overlayContent, pressEscape } from '@/__tests__/helpers/mountDialogPreset'
 import { withViewportWidth } from '@/__tests__/helpers/withViewportWidth'
 
@@ -18,10 +20,16 @@ function deferred<T>() {
     return { promise, resolve }
 }
 
-function createContent(finish: () => unknown) {
+function createContent(handler?: FormDialogFinishHandler) {
     return defineComponent({
+        props: {
+            modelValue: { type: String as PropType<string | null>, default: null },
+        },
         setup() {
-            const { submit, loading } = useDialogForm(finish)
+            const { submit, loading, onFinish } = useFormDialog()
+            if (handler) {
+                onFinish(handler)
+            }
             return () => h('div', [
                 h('input', { class: 'content-input' }),
                 h('button', { type: 'button', class: 'content-submit', onClick: () => { void submit() } }, loading.value ? 'busy' : 'go'),
@@ -30,24 +38,40 @@ function createContent(finish: () => unknown) {
     })
 }
 
-function createNestedContent(finish: () => unknown) {
-    const Inner = createContent(finish)
+function createNestedHandlerContent(handler: FormDialogFinishHandler) {
+    const Inner = defineComponent({
+        setup() {
+            onDialogFinish(handler)
+            return () => h('span')
+        },
+    })
     return defineComponent({
+        props: {
+            modelValue: { type: String as PropType<string | null>, default: null },
+        },
         setup: () => () => h('section', [h(Inner)]),
     })
 }
 
 const ValidatedContent = defineComponent({
-    setup() {
-        const state = ref({ name: '' })
-        const v = useVuelidate({ name: { required } }, state)
-        useDialogForm(() => state.value.name)
+    props: {
+        modelValue: { type: String as PropType<string | null>, default: null },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+        const name = computed({
+            get: () => props.modelValue ?? '',
+            set: (value: string) => {
+                emit('update:modelValue', value)
+            },
+        })
+        const v = useVuelidate({ name: { required } }, { name })
         return () => h('input', {
             'class': 'content-input',
-            'value': state.value.name,
+            'value': name.value,
             'data-invalid': String(v.value.$error),
             'onInput': (event: Event) => {
-                state.value.name = (event.target as HTMLInputElement).value
+                name.value = (event.target as HTMLInputElement).value
             },
         })
     },
@@ -82,8 +106,8 @@ describe('FormDialog', () => {
         document.body.innerHTML = ''
     })
 
-    it('resolves the finish result after the save button', async () => {
-        const { button, resolve } = mountForm({ component: createContent(() => 'Ada') })
+    it('resolves the model value after the save button', async () => {
+        const { button, resolve } = mountForm({ component: createContent(), initialValue: 'Ada' })
         await flushPromises()
         await button('action.save').trigger('click')
         await vi.waitFor(() => {
@@ -92,7 +116,7 @@ describe('FormDialog', () => {
     })
 
     it('submits through the form element, so Enter submits', async () => {
-        const { form, resolve } = mountForm({ component: createContent(() => 'Ada') })
+        const { form, resolve } = mountForm({ component: createContent(), initialValue: 'Ada' })
         await flushPromises()
         form().dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
         await vi.waitFor(() => {
@@ -100,8 +124,8 @@ describe('FormDialog', () => {
         })
     })
 
-    it('submits through the submit function returned by useDialogForm', async () => {
-        const { resolve } = mountForm({ component: createContent(() => 'Ada') })
+    it('submits through the submit function returned by useFormDialog', async () => {
+        const { resolve } = mountForm({ component: createContent(), initialValue: 'Ada' })
         await flushPromises()
         document.body.querySelector<HTMLButtonElement>('.content-submit')?.click()
         await vi.waitFor(() => {
@@ -109,18 +133,98 @@ describe('FormDialog', () => {
         })
     })
 
-    it('registers finish from a nested child component', async () => {
-        const { button, resolve } = mountForm({ component: createNestedContent(() => 'nested') })
+    it('runs onDialogFinish handlers registered in a nested child component', async () => {
+        const handler = vi.fn(() => true)
+        const { button, resolve } = mountForm({ component: createNestedHandlerContent(handler), initialValue: 'nested' })
         await flushPromises()
         await button('action.save').trigger('click')
         await vi.waitFor(() => {
             expect(resolve).toHaveBeenCalledWith('nested')
         })
+        expect(handler).toHaveBeenCalledTimes(1)
     })
 
-    it('passes the finish result through action and resolves with its result', async () => {
+    it('runs onFinish and onDialogFinish handlers in order before action', async () => {
+        const calls: string[] = []
+        const action = vi.fn((value: unknown) => {
+            calls.push('action')
+            return Promise.resolve(value)
+        })
+        const Content = defineComponent({
+            props: {
+                modelValue: { type: String as PropType<string | null>, default: null },
+            },
+            setup() {
+                const { onFinish } = useFormDialog()
+                onFinish(async () => {
+                    await Promise.resolve()
+                    calls.push('first')
+                })
+                onDialogFinish(() => {
+                    calls.push('second')
+                    return true
+                })
+                return () => h('input', { class: 'content-input' })
+            },
+        })
+        const { button, resolve } = mountForm({ component: Content, initialValue: 'Ada', action })
+        await flushPromises()
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith('Ada')
+        })
+        expect(calls).toEqual(['first', 'second', 'action'])
+    })
+
+    it('keeps the dialog open and skips the save when an onFinish handler returns false', async () => {
+        let allow = false
+        const action = vi.fn((value: unknown) => Promise.resolve(value))
+        const { button, resolve } = mountForm({ component: createContent(() => Promise.resolve(allow)), initialValue: 'Ada', action })
+        await flushPromises()
+        await button('action.save').trigger('click')
+        await flushPromises()
+        expect(action).not.toHaveBeenCalled()
+        expect(resolve).not.toHaveBeenCalled()
+        expect(document.body.querySelector('.ui-dialog')).not.toBeNull()
+        expect(document.body.querySelector('.v-alert')).toBeNull()
+        allow = true
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith('Ada')
+        })
+    })
+
+    it('shows the error when an onFinish handler throws', async () => {
+        const content = createContent(() => {
+            throw new Error('Not yet')
+        })
+        const { button, resolve } = mountForm({ component: content, initialValue: 'Ada' })
+        await flushPromises()
+        await button('action.save').trigger('click')
+        await vi.waitFor(() => {
+            expect(document.body.querySelector('.v-alert')?.textContent).toContain('Not yet')
+        })
+        expect(resolve).not.toHaveBeenCalled()
+    })
+
+    it('closes like cancel through the close function returned by useFormDialog', async () => {
+        const Content = defineComponent({
+            setup() {
+                const { close } = useFormDialog()
+                return () => h('button', { type: 'button', class: 'content-close', onClick: close }, 'close')
+            },
+        })
+        const { resolve } = mountForm({ component: Content, initialValue: 'initial' })
+        await flushPromises()
+        document.body.querySelector<HTMLButtonElement>('.content-close')?.click()
+        await vi.waitFor(() => {
+            expect(resolve).toHaveBeenCalledWith(null)
+        })
+    })
+
+    it('passes the model value through action and resolves with its result', async () => {
         const action = vi.fn((value: unknown) => Promise.resolve(`${String(value)}!`))
-        const { button, resolve } = mountForm({ component: createContent(() => 'Ada'), action })
+        const { button, resolve } = mountForm({ component: createContent(), initialValue: 'Ada', action })
         await flushPromises()
         await button('action.save').trigger('click')
         await vi.waitFor(() => {
@@ -134,7 +238,7 @@ describe('FormDialog', () => {
             await Promise.resolve()
             throw new Error('Server said no')
         })
-        const { button, resolve } = mountForm({ component: createContent(() => 'Ada'), action })
+        const { button, resolve } = mountForm({ component: createContent(), initialValue: 'Ada', action })
         await flushPromises()
         await button('action.save').trigger('click')
         await vi.waitFor(() => {
@@ -151,7 +255,7 @@ describe('FormDialog', () => {
             await Promise.resolve()
             throw reason
         })
-        const { button, resolve } = mountForm({ component: createContent(() => 'Ada'), action })
+        const { button, resolve } = mountForm({ component: createContent(), initialValue: 'Ada', action })
         await flushPromises()
         await button('action.save').trigger('click')
         await vi.waitFor(() => {
@@ -162,24 +266,24 @@ describe('FormDialog', () => {
     })
 
     it('ignores submit while loading', async () => {
-        const pending = deferred<string>()
-        const finish = vi.fn(() => pending.promise)
-        const { button, resolve } = mountForm({ component: createContent(finish) })
+        const pending = deferred<boolean>()
+        const handler = vi.fn(() => pending.promise)
+        const { button, resolve } = mountForm({ component: createContent(handler), initialValue: 'late' })
         await flushPromises()
         await button('action.save').trigger('click')
         await button('action.save').trigger('click')
         document.body.querySelector<HTMLButtonElement>('.content-submit')?.click()
         await flushPromises()
-        expect(finish).toHaveBeenCalledTimes(1)
-        pending.resolve('late')
+        expect(handler).toHaveBeenCalledTimes(1)
+        pending.resolve(true)
         await vi.waitFor(() => {
             expect(resolve).toHaveBeenCalledWith('late')
         })
     })
 
     it('disables cancel and the close icon while loading and ignores Escape', async () => {
-        const pending = deferred<string>()
-        const { button, closeButton, resolve } = mountForm({ component: createContent(() => pending.promise) })
+        const pending = deferred<boolean>()
+        const { button, closeButton, resolve } = mountForm({ component: createContent(() => pending.promise), initialValue: 'done' })
         await flushPromises()
         await button('action.save').trigger('click')
         await flushPromises()
@@ -190,7 +294,7 @@ describe('FormDialog', () => {
         await button('action.cancel').trigger('click')
         await flushPromises()
         expect(resolve).not.toHaveBeenCalled()
-        pending.resolve('done')
+        pending.resolve(true)
         await vi.waitFor(() => {
             expect(resolve).toHaveBeenCalledWith('done')
         })
@@ -198,16 +302,19 @@ describe('FormDialog', () => {
 
     it('ignores cancel while validation is still running and never saves after a close', async () => {
         const validator = deferred<boolean>()
-        const finish = vi.fn(() => 'saved')
+        const finish = vi.fn(() => true)
         const AsyncContent = defineComponent({
+            props: {
+                modelValue: { type: String as PropType<string | null>, default: null },
+            },
             setup() {
                 const state = ref({ name: 'Ada' })
                 useVuelidate({ name: { pending: helpers.withAsync(() => validator.promise) } }, state)
-                useDialogForm(finish)
+                onDialogFinish(finish)
                 return () => h('input', { class: 'content-input' })
             },
         })
-        const { button, closeButton, resolve, reject } = mountForm({ component: AsyncContent })
+        const { button, closeButton, resolve, reject } = mountForm({ component: AsyncContent, initialValue: 'saved' })
         await flushPromises()
         await button('action.save').trigger('click')
         await flushPromises()
@@ -245,7 +352,7 @@ describe('FormDialog', () => {
     })
 
     it('resolves null on cancel, or rejects when required', async () => {
-        const first = mountForm({ component: createContent(() => 'x') })
+        const first = mountForm({ component: createContent(), initialValue: 'x' })
         await flushPromises()
         await first.button('action.cancel').trigger('click')
         await vi.waitFor(() => {
@@ -254,7 +361,7 @@ describe('FormDialog', () => {
         first.wrapper.unmount()
         document.body.innerHTML = ''
 
-        const second = mountForm({ component: createContent(() => 'x'), required: true })
+        const second = mountForm({ component: createContent(), initialValue: 'x', required: true })
         await flushPromises()
         await second.closeButton()?.trigger('click')
         await vi.waitFor(() => {
@@ -264,7 +371,7 @@ describe('FormDialog', () => {
     })
 
     it('focuses the first input after opening', async () => {
-        mountForm({ component: createContent(() => 'x') })
+        mountForm({ component: createContent(), initialValue: 'x' })
         await vi.waitFor(() => {
             expect(document.activeElement?.classList.contains('content-input')).toBe(true)
         })
@@ -275,7 +382,7 @@ describe('FormDialog', () => {
         const LocalContent = defineComponent({
             setup() {
                 const name = ref('')
-                useDialogForm(() => name.value)
+                useFormDialog()
                 onMounted(() => {
                     mounts++
                 })
@@ -425,14 +532,11 @@ describe('FormDialog with a v-model component', () => {
         })
     })
 
-    it('does not disable save for a required form that registers finish', async () => {
-        const { button } = mountForm({ component: createContent(() => 'x'), required: true })
-        await flushPromises()
-        expect(button('action.save').attributes('disabled')).toBeUndefined()
-    })
-
     it('does not pass modelValue and toolbar to components that do not declare them', async () => {
-        mountForm({ component: createContent(() => 'x'), initialValue: 'initial' })
+        const PlainContent = defineComponent({
+            setup: () => () => h('div', [h('input', { class: 'content-input' })]),
+        })
+        mountForm({ component: PlainContent, initialValue: 'initial' })
         await flushPromises()
         const root = document.body.querySelector('.ui-dialog__content > div')
         expect(root?.hasAttribute('modelvalue')).toBe(false)
