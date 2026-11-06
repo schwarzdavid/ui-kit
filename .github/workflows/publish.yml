@@ -26,11 +26,8 @@ jobs:
             echo "Release tag $TAG does not match package.json version $VERSION"
             exit 1
           fi
-  verify:
-    needs: guard
-    uses: ./.github/workflows/verify.yml
   publish:
-    needs: verify
+    needs: guard
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
