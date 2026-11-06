@@ -23,7 +23,7 @@
     import useVuelidate from '@vuelidate/core'
     import { VList } from 'vuetify/components'
     import { required } from '@/composables/vuelidate/validators'
-    import { useDialogForm } from '@/composables/dialog/useDialogForm'
+    import { useFormDialog } from '@/composables/dialog/useFormDialog'
 
     defineProps<{
         folders: Folder[]
@@ -37,5 +37,5 @@
         },
     })
     const v = useVuelidate({ model: { required } }, { model })
-    const { submit } = useDialogForm(() => model.value)
+    const { submit } = useFormDialog()
 </script>

@@ -17,7 +17,8 @@
     const dialog = useDialog()
     const invitation = ref<Invitation | null>(null)
 
-    async function sendInvitation(address: string): Promise<Invitation> {
+    async function sendInvitation(input: string): Promise<Invitation> {
+        const address = input.trim()
         await new Promise(resolve => setTimeout(resolve, 800))
         if (address.includes('taken')) {
             throw new Error(`${address} is already a member of this workspace.`)
@@ -31,6 +32,7 @@
             translateTitle: false,
             width: 'sm',
             component: FormDialogInviteContent,
+            initialValue: '',
             action: sendInvitation,
             saveCta: { text: 'Send invitation', translateText: false },
             abortCta: { text: 'Cancel', translateText: false },

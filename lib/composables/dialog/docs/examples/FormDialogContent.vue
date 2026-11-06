@@ -1,6 +1,12 @@
 <template>
     <div class="d-flex flex-column ga-5">
-        <VTextField v-model="v.name.$model" label="Name" :error="v.name.$error" />
+        <VTextField
+            v-model="v.name.$model"
+            label="Name"
+            :error="v.name.$error || taken"
+            :error-messages="taken ? 'This name is already taken.' : undefined"
+            hint="Try “admin” to see onDialogFinish cancel the save."
+            persistent-hint />
         <VTextField v-model.number="v.age.$model" label="Age" type="number" :error="v.age.$error" />
         <VDateInput v-model="v.date.$model" label="Date" :error="v.date.$error" />
     </div>
@@ -19,13 +25,9 @@
     import useVuelidate, { type ValidationArgs } from '@vuelidate/core'
     import { VDateInput, VTextField } from 'vuetify/components'
     import { maxLength, minLength, required } from '@/composables/vuelidate/validators'
-    import { useDialogForm } from '@/composables/dialog/useDialogForm'
+    import { onDialogFinish } from '@/composables/dialog/onDialogFinish'
 
-    const state = ref<FormDialogForm>({
-        age: null,
-        date: new Date(),
-        name: '',
-    })
+    const model = defineModel<FormDialogForm>({ required: true })
 
     const rules: ValidationArgs<FormDialogForm> = {
         name: {
@@ -41,7 +43,12 @@
         },
     }
 
-    const v = useVuelidate(rules, state)
+    const v = useVuelidate(rules, model)
+    const taken = ref(false)
 
-    useDialogForm(() => state.value.name)
+    onDialogFinish(async () => {
+        await new Promise(resolve => setTimeout(resolve, 400))
+        taken.value = model.value.name.trim().toLowerCase() === 'admin'
+        return !taken.value
+    })
 </script>

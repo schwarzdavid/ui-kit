@@ -43,10 +43,11 @@
     }
 
     async function openFormDialog(): Promise<void> {
-        result.value = await dialog.form<string>({
+        result.value = await dialog.form({
             title: 'New profile',
             translateTitle: false,
             component: FormDialogContent,
+            initialValue: { name: '', age: null, date: new Date() },
         })
     }
 
